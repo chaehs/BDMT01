@@ -1,9 +1,9 @@
 <template>
-  <div id="app" class="bg-gray-50 min-h-screen font-sans">
-    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-      <header class="mb-16 text-center">
-        <h1 class="text-6xl font-extrabold text-gray-800 tracking-tighter">Racket Identification Card</h1>
-        <p class="mt-4 text-xl text-gray-500">Official registry of high-performance badminton rackets.</p>
+  <div class="bg-gray-100 min-h-screen font-sans">
+    <main class="max-w-screen-xl mx-auto px-4 md:px-10 py-10 md:py-20">
+      <header class="mb-12 text-center">
+        <h1 class="text-4xl md:text-6xl font-extrabold text-gray-800 tracking-tighter">라켓정보</h1>
+        <p class="text-gray-500 mt-2">최적의 장비를 찾아보세요</p>
       </header>
       <RacketList />
     </main>
@@ -15,11 +15,6 @@ import RacketList from './components/RacketList.vue';
 </script>
 
 <style>
-/* Using a more professional and readable font */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-
-#app {
-  font-family: 'Inter', sans-serif;
-   background-color: #f8f9fa; 
-}
+#app { font-family: 'Inter', sans-serif; }
 </style>
