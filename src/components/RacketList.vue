@@ -134,9 +134,7 @@ onMounted(async () => {
 
   if (error) {
     console.error('Error fetching rackets:', error);
-  }
-  
-  if (data) {
+  } else if (data) {
     console.log('Fetched data:', data);
     rackets.value = data;
   } else {
