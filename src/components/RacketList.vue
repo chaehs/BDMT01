@@ -1,3 +1,4 @@
+
 <template>
   <div class="w-full">
     <!-- Filter Section -->
@@ -64,8 +65,9 @@
 
       <!-- No results state -->
       <div v-else class="text-center py-20 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
-        <span class="text-4xl block mb-4">😅</span>
-        <p class="text-gray-500 font-medium">검색 결과가 없습니다.</p>
+        <span class="text-4xl block mb-4">🤔</span>
+        <p class="text-gray-500 font-medium">데이터를 불러오는 중이거나, 표시할 라켓이 없습니다.</p>
+        <p class="text-xs text-gray-400 mt-2">잠시만 기다려주세요...</p>
       </div>
     </div>
 
@@ -79,9 +81,10 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive } from 'vue'
+import { ref, computed, reactive, onMounted } from 'vue'
 import RacketCard from './RacketCard.vue'
 import RacketDetail from './RacketDetail.vue'
+import { supabase } from '../supabase'
 
 const brands = ['Yonex', 'Victor', 'Li-Ning', 'Mizuno']
 const weights = ['3U', '4U', '5U', 'F']
@@ -107,10 +110,6 @@ const closeDetail = () => {
   selectedRacket.value = null
 }
 
-const isAnyFilterActive = computed(() => {
-  return filters.brand !== '' || filters.weight !== '' || filters.search !== '' || filters.tags.length > 0
-})
-
 const resetFilters = () => {
   filters.brand = ''
   filters.weight = ''
@@ -127,68 +126,36 @@ const toggleTag = (tag) => {
   }
 }
 
-const rackets = ref([
-  { 
-    id: 1, 
-    name: 'ArcSaber 11 Pro', 
-    brand: 'Yonex', 
-    imageUrl: 'https://placehold.co/400x500/slate/white?text=ArcSaber+11', 
-    weight: '4U', 
-    balance: 'Even Balance', 
-    shaftFlex: 'Stiff', 
-    maxTension: '28 lbs', 
-    gripSize: 'G5',
-    frameShape: 'Isometric',
-    colors: ['#FF0000', '#000000'],
-    rating: 4.7,
-    reviewCount: 26,
-    tags: ['가성비', '올라운드', '명검', '정교함', '초보자용', '소리좋음'] 
-  },
-  { 
-    id: 2, 
-    name: 'Astrox 99 Pro', 
-    brand: 'Yonex', 
-    imageUrl: 'https://placehold.co/400x500/orange/white?text=Astrox+99', 
-    weight: '3U', 
-    balance: 'Head Heavy', 
-    shaftFlex: 'Extra Stiff', 
-    maxTension: '29 lbs', 
-    gripSize: 'G5',
-    frameShape: 'Isometric',
-    colors: ['#FF8C00', '#000000'],
-    rating: 4.8,
-    reviewCount: 42,
-    tags: ['파워', '스매시', '공격형', '국가대표', '상급자용'] 
-  },
-  { 
-    id: 3, 
-    name: 'Brave Sword 12', 
-    brand: 'Victor', 
-    imageUrl: 'https://placehold.co/400x500/blue/white?text=BS+12', 
-    weight: '4U', 
-    balance: 'Even Balance', 
-    shaftFlex: 'Medium', 
-    maxTension: '30 lbs', 
-    gripSize: 'G5',
-    frameShape: 'Aero-Sword',
-    colors: ['#0000FF', '#FFFFFF'],
-    rating: 4.5,
-    reviewCount: 158,
-    tags: ['스피드', '드라이브', '가성비', '입문추천', '초보자용'] 
+const rackets = ref([])
+
+onMounted(async () => {
+  console.log('Fetching rackets from Supabase...');
+  const { data, error } = await supabase.from('rackets').select('*');
+
+  if (error) {
+    console.error('Error fetching rackets:', error);
   }
-])
+  
+  if (data) {
+    console.log('Fetched data:', data);
+    rackets.value = data;
+  } else {
+    console.log('No data returned from Supabase. This might be due to Row Level Security (RLS).');
+  }
+});
 
 const filteredRackets = computed(() => {
-  return rackets.value.filter(racket => {
-    const brandMatch = !filters.brand || racket.brand === filters.brand
-    const weightMatch = !filters.weight || racket.weight === filters.weight
-    const searchMatch = !filters.search || 
-      racket.name.toLowerCase().includes(filters.search.toLowerCase()) ||
-      racket.brand.toLowerCase().includes(filters.search.toLowerCase())
-    const tagMatch = filters.tags.length === 0 || 
-      filters.tags.every(t => racket.tags.includes(t))
+    if (!rackets.value) return [];
+    return rackets.value.filter(racket => {
+        const brandMatch = !filters.brand || racket.brand === filters.brand;
+        const weightMatch = !filters.weight || racket.weight === filters.weight;
+        const searchMatch = !filters.search || 
+            (racket.name && racket.name.toLowerCase().includes(filters.search.toLowerCase())) ||
+            (racket.brand && racket.brand.toLowerCase().includes(filters.search.toLowerCase()));
+        const tagMatch = filters.tags.length === 0 || 
+            (racket.tags && filters.tags.every(t => racket.tags.includes(t)));
 
-    return brandMatch && weightMatch && searchMatch && tagMatch
-  })
-})
+        return brandMatch && weightMatch && searchMatch && tagMatch;
+    });
+});
 </script>
