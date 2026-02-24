@@ -29,7 +29,7 @@
     - 초기화면은 데이터 전송량 최소화를 위해 빈화면으로 하며 필터 선택시 렌더링
 
 ▢ 에디터 : 파이어베이스 스튜디오
-▢ 프론트엔드 : vue3.js(composition API)
+▢ 프론트엔드 : vue3.js(composition API), typescript는 내가 몰라서 js로.
 ▢ 백엔드 : supabase
   ◯ 모든 장비가 공유하는 하나의 tags 테이블을 만들고, 각 장비(라켓, 신발 등)와 연결하는 매핑 테이블을 별도로 두는 방식
     - 라켓 테이블 : rackets, 공통 태그 마스터 : tags, 라켓 태그 연결 테이블 : racket_tag_map
