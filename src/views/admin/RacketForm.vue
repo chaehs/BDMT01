@@ -121,6 +121,9 @@ const isSaving = ref(false)
 const hasDraft = ref(false)
 const imageFile = ref(null)
 
+const BUCKET_NAME = 'BDMT01';
+const IMAGE_FOLDER = 'racket_storage';
+
 const form = reactive({
   name: '',
   brand: 'YONEX',
@@ -140,8 +143,8 @@ const imagePreviewUrl = computed(() => {
   }
   if (form.image_url) {
     if (form.image_url.startsWith('http')) return form.image_url
-    // 버킷 이름을 대문자로 수정했습니다.
-    const { data } = supabase.storage.from('RACKETS').getPublicUrl(form.image_url)
+    // 버킷과 폴더 구조에 맞게 수정
+    const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(`${IMAGE_FOLDER}/${form.image_url}`)
     return data.publicUrl
   }
   return 'https://placehold.co/300x300/F3F4F6/9CA3AF?text=NO+IMAGE'
@@ -206,51 +209,58 @@ const clearDraft = () => {
   hasDraft.value = false
 }
 
-// 저장 로직 (최종 수정)
 const saveRacket = async () => {
   if (isSaving.value) return
   isSaving.value = true
   
   try {
+    if (!isEdit.value) {
+      if (!form.weight?.trim()) form.weight = '4U';
+      if (!form.balance?.trim()) form.balance = 'HEAD HEAVY';
+      if (form.bal_point === null || form.bal_point === '') form.bal_point = 305;
+      if (!form.flex?.trim()) form.flex = 'STIFF';
+      if (!form.max_tension?.trim()) form.max_tension = '28';
+      if (!form.grip_size?.trim()) form.grip_size = 'G5';
+      if (!form.colors?.trim()) form.colors = 'White, Black';
+    }
+
     let imagePath = form.image_url;
 
-    // 1. 이미지 업로드 단계
     if (imageFile.value) {
       const file = imageFile.value
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${Date.now()}.${fileExt}`
+      const fileName = `${Date.now()}_${file.name}`
+      const filePath = `${IMAGE_FOLDER}/${fileName}`
       
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('RACKETS') // 버킷 이름을 대문자로 수정
-        .upload(fileName, file)
+      // 버킷과 폴더 구조에 맞게 수정
+      const { error: uploadError } = await supabase.storage
+        .from(BUCKET_NAME)
+        .upload(filePath, file)
 
       if (uploadError) {
         throw new Error(`[이미지 업로드 실패] ${uploadError.message}`);
       }
+      // DB에는 파일 이름만 저장
       imagePath = fileName;
     }
 
-    // 2. 데이터 준비 단계 (사용자 테이블 스키마에 맞게 수정)
     const racketData = {
-      name: form.name?.trim(),
-      brand: form.brand,
+      name: form.name?.trim().toUpperCase(),
+      brand: form.brand?.toUpperCase(),
       image_url: imagePath,
-      weight: form.weight || null,
-      balance: form.balance || null,
+      weight: form.weight?.toUpperCase() || null,
+      balance: form.balance?.toUpperCase() || null,
       bal_point: form.bal_point ? parseInt(form.bal_point, 10) : null,
-      flex: form.flex || null,
+      flex: form.flex?.toUpperCase() || null,
       max_tension: form.max_tension?.toString() || null,
-      grip_size: form.grip_size || null,
+      grip_size: form.grip_size?.toUpperCase() || null,
     };
 
-    // colors는 배열로 변환
     if (typeof form.colors === 'string' && form.colors.trim()) {
-      racketData.colors = form.colors.split(',').map(c => c.trim()).filter(Boolean);
+      racketData.colors = form.colors.split(',').map(c => c.trim().toUpperCase()).filter(Boolean);
     } else {
       racketData.colors = [];
     }
 
-    // 3. DB 저장 단계
     let response;
     if (isEdit.value) {
       response = await supabase
@@ -258,7 +268,6 @@ const saveRacket = async () => {
         .update(racketData)
         .eq('id', route.params.id);
     } else {
-      // rating, review_count 등 불필요한 필드 제거
       response = await supabase
         .from('rackets')
         .insert([racketData]);

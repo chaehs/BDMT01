@@ -35,7 +35,7 @@
     - 라켓 테이블 : rackets, 공통 태그 마스터 : tags, 라켓 태그 연결 테이블 : racket_tag_map, 라켓 리뷰 테이블 : racket_reviews
     - rackets 컬럼 : 브랜드(brand), 이름(name), 무게(weight), 밸런스(balance), 밸런스포인트(bal_point), 탄성(flex), 스트링 최대장력(max_tension), 그립두께(grip_size), 대표색상(colors) 1~2가지
   ◯ Auth : 구글 로그인 구현 후 다른 방식 추후 구현
-  ◯ Storage : RACKETS(대문자) 폴더에 AI 라켓이미지 저장
+  ◯ Storage : racket_storage 폴더에 AI 라켓이미지 저장
 
 ▢ 스타일 : Tailwind CSS
   ◯ 빌드 후에 style이 적용이 잘 안되는 경우 tailwind 설치 관련 파일, style 관련 파일 재확인
