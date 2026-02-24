@@ -104,14 +104,18 @@ const racketImageUrl = computed(() => {
 const defaultImageUrl = computed(() => {
   const { data } = supabase.storage
     .from('BDMT01')
-    .getPublicUrl('RACKETS/DEFAULT_RACKET.png'); // 소문자로 변경
-  return data.publicUrl;
+    .getPublicUrl('RACKETS/DEFAULT_RACKET.png');
+  // 캐시 문제를 해결하기 위해 타임스탬프 추가
+  return `${data.publicUrl}?t=${new Date().getTime()}`;
 });
 
 const handleImageError = (e) => {
-  if (e.target.src !== defaultImageUrl.value) {
+  const baseDefaultPath = 'RACKETS/DEFAULT_RACKET.png';
+  // 기본 이미지로 무한 대체되는 것을 방지
+  if (!e.target.src.includes(baseDefaultPath)) {
     e.target.src = defaultImageUrl.value;
   } else {
+    // 기본 이미지조차 실패하면 플레이스홀더 표시
     e.target.src = 'https://placehold.co/400x600?text=No+Image';
   }
 };
@@ -130,8 +134,7 @@ const specs = computed(() => [
   { label: '밸런스', value: props.racket?.balance || 'N/A' },
   { label: '탄성', value: props.racket?.flex || 'N/A' },
   { label: '최대장력', value: props.racket?.max_tension || 'N/A' },
-  { label: '그립두께', value: props.racket?.grip_size || 'N/A' },
-  { label: '프레임', value: props.racket?.frame_shape || 'N/A' }
+  { label: '그립두께', value: props.racket?.grip_size || 'N/A' }
 ]);
 
 </script>
