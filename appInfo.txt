@@ -13,7 +13,7 @@
   ◯ 사각형 카드 안에 라켓관련 다음의 정보를 제공(supabase 데이터 수신)
     - 카드보기시 가능하면 2열로 정렬하고 반응형일 것
     - 신분증 처럼 이미지와 정보 배치
-    - 라켓정보: 브랜드(brand), 이름(name), 무게(weight), 밸런스(balance), 밸런스포인트(bal_point), 탄성(flex), 스트링 최대장력(max_tension), 그립두께(grip_size), 대표색상(colors) 1~2가지
+    - 라켓정보 : 브랜드(brand), 이름(name), 무게(weight), 밸런스(balance), 밸런스포인트(bal_point), 탄성(flex), 스트링 최대장력(max_tension), 그립두께(grip_size), 대표색상(colors) 1~2가지
       • 영어는 무조건 대문자
     - 라켓이미지
     - 평점
@@ -32,8 +32,11 @@
 ▢ 프론트엔드 : vue3.js(composition API), typescript는 내가 몰라서 js로.
 ▢ 백엔드 : supabase
   ◯ 모든 장비가 공유하는 하나의 tags 테이블을 만들고, 각 장비(라켓, 신발 등)와 연결하는 매핑 테이블을 별도로 두는 방식
-    - 라켓 테이블 : rackets, 공통 태그 마스터 : tags, 라켓 태그 연결 테이블 : racket_tag_map
+    - 라켓 테이블 : rackets, 공통 태그 마스터 : tags, 라켓 태그 연결 테이블 : racket_tag_map, 라켓 리뷰 테이블 : racket_reviews
+    - rackets 컬럼 : 브랜드(brand), 이름(name), 무게(weight), 밸런스(balance), 밸런스포인트(bal_point), 탄성(flex), 스트링 최대장력(max_tension), 그립두께(grip_size), 대표색상(colors) 1~2가지
   ◯ Auth : 구글 로그인 구현 후 다른 방식 추후 구현
+  ◯ Storage : RACKETS(대문자) 폴더에 AI 라켓이미지 저장
+
 ▢ 스타일 : Tailwind CSS
   ◯ 빌드 후에 style이 적용이 잘 안되는 경우 tailwind 설치 관련 파일, style 관련 파일 재확인
 ▢ github : https://github.com/chaehs/BDMT01

@@ -40,6 +40,7 @@ A web application for badminton players to easily search for racket information,
     - **Tag Input**: A UI for users to add their own tags to the racket. An autocomplete feature will assist with tag entry.
 
 ### 2.4. Admin Page (`Dashboard.vue`)
+
 - **Purpose**: A dedicated page for administrators to manage racket data (CRUD operations).
 
 ---
@@ -56,11 +57,15 @@ A web application for badminton players to easily search for racket information,
 ### 3.2. Database Schema (Supabase)
 
 - **`rackets` table**:
-    - `id`, `brand`, `name`, `weight`, `balance`, `flex`, `max_tension`, `grip_size`, `frame_shape`, `colors` (Array), `image_url`, `rating_avg`, `review_count`, `rating_distribution` (JSON).
+    - `id`, `brand`, `name`, `weight`, `balance`, `flex`, `max_tension`, `grip_size`, `frame_shape`, `image_url`, `rating_avg`, `review_count`, `rating_distribution` (JSON).
 - **`tags` table**:
     - `id`, `name` (unique).
 - **`racket_tag_map` table**:
     - `racket_id`, `tag_id`, `user_id` (to track who added the tag).
+- **`colors` table**:
+    - `id`, `name`, `hex_code`.
+- **`racket_color_map` table**:
+    - `racket_id`, `color_id`.
 
 ### 3.3. Project Structure
 
@@ -83,4 +88,6 @@ A web application for badminton players to easily search for racket information,
 - **[✓] Supabase Integration**: Connected the app to Supabase and fetched initial racket data.
 - **[✓] Implement Initial Screen Logic**: Modified `RacketList.vue` to be empty initially and load data based on user filter/search actions.
 - **[✓] Enhanced Filtering**: Added `balance` and `flex` filters. Standardized all filter options to uppercase.
+- **[✓] Basic Admin Form Submission**: Fixed a bug in the admin form to allow saving and updating basic racket information (excluding tags and colors) to the Supabase `rackets` table.
 - **[Up Next] Implement Google Login**: Integrate Supabase Authentication for user-specific interactions.
+- **[Postponed] Advanced Form Logic**: Implement saving for racket tags and colors, which involves multiple table interactions (`tags`, `colors`, `racket_tag_map`, `racket_color_map`).
