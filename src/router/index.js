@@ -1,8 +1,8 @@
 
 import { createRouter, createWebHistory } from 'vue-router';
-import RacketList from '../components/RacketList.vue';
-import RacketDetail from '../components/RacketDetail.vue';
-import Admin from '../components/Admin.vue';
+import RacketList from '../views/user/RacketList.vue';
+import RacketDetail from '../views/user/RacketDetail.vue';
+import Dashboard from '../views/admin/Dashboard.vue';
 
 const routes = [
   {
@@ -18,8 +18,8 @@ const routes = [
   },
   {
     path: '/admin',
-    name: 'Admin',
-    component: Admin,
+    name: 'AdminDashboard',
+    component: Dashboard,
   },
 ];
 

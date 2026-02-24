@@ -1,57 +1,86 @@
-# Badminton Racket Review App Blueprint (BDMT01)
+# Blueprint: Badminton Racket Review Platform (BDMT01)
 
-## 1. Project Overview
+## 1. Project Goal
 
-This project is a platform for badminton enthusiasts to access detailed racket specifications, real-time user tags, and ratings. It is designed with scalability and versatility in mind, with the ultimate goal of launching a hybrid app.
-
-## 2. Implemented Features & Design
-
-### 2.1. Core Functionality
-
-- **Racket List & Filtering**:
-  - The initial screen is kept empty to optimize data loading, with a UI that encourages searching.
-  - A filtering system for brands (Yonex, Victor, etc.), weights (3U, 4U, etc.), and tags has been implemented.
-
-- **Racket Card (ID-Card Style)**:
-  - A two-column layout is applied.
-  - Specs include: brand, name, weight, balance, shaft flex, max tension, grip size, frame shape, and representative colors (indicated by dots).
-
-- **Rating System**:
-  - In the list view, ratings are displayed as: ★ 4.7 (26).
-  - In the **detail view (RacketDetail)**, the distribution of ratings from 5 stars to 1 star is visualized with a bar chart.
-
-- **Tag System**:
-  - In the list view, the top 4 tags are shown, with the rest indicated by a number (e.g., +5).
-  - The detail view includes a UI for user-submitted tags (placeholder).
-
-### 2.2. Backend & Data
-
-- **Data Source**: The application is now connected to a real-time **Supabase database**.
-  - Mock data has been completely removed.
-  - The front-end components now directly use the `snake_case` column names from the Supabase `rackets` table (e.g., `review_count`, `max_tension`).
-
-### 2.3. Tech Stack & Design
-
-- **Frontend**: Vue 3 (Composition API, `<script setup>`, TypeScript)
-- **Backend**: Supabase
-  - Tables: `rackets`, `tags`, `racket_tag_map`
-- **Styling**: Tailwind CSS
-- **Design Aesthetic**: A modern and clean white/slate color scheme, with rounded corners (rounded-3xl) and deep shadow effects for a sense of depth.
-
-## 3. Current Requested Plan & Steps
-
-### Step 1: Enhance Data Model & Mock Data (Completed)
-- Reflected the fields defined in `appInfo.txt` and simulated rating distribution data.
-
-### Step 2: Refine UI Components (Completed)
-- `RacketList.vue`: Applied filtering and initial empty screen logic.
-- `RacketCard.vue`: Implemented the ID-card style layout and rating/tag logic.
-- `RacketDetail.vue`: Implemented the detailed spec and star rating graph modal.
-
-### Step 3: Integrate Supabase & Implement Auth (In Progress)
-- **[✓] Fetched real data from the Supabase `rackets` table.**
-- **[✓] Aligned front-end property names (`snake_case`) with database column names for consistency.**
-- **[ ] Implement Google login and user-specific interactions.**
+A web application for badminton players to easily search for racket information, check real user reviews and ratings, and share their own feedback.
 
 ---
-Last Updated: 2026-02-23
+
+## 2. Core Features & UI/UX
+
+### 2.1. Main Page (`RacketList.vue`)
+
+- **Initial State**: To minimize initial data transfer, the screen starts empty. It prompts users to select filters or search to load the racket list.
+- **Filtering**:
+    - **Brand**: Dropdown menu (e.g., YONEX, VICTOR, LI-NING).
+    - **Weight**: Dropdown menu (e.g., 3U, 4U, 5U).
+    - **Balance**: Dropdown for HEAD LIGHT, EVEN BALANCE, HEAD HEAVY.
+    - **Flex**: Dropdown for FLEXIBLE, MEDIUM, STIFF, EXTRA STIFF.
+    - **Tags**: Users can select from popular tags or search for them.
+- **Search**: A search bar for finding rackets by name.
+- **Racket List**: A grid of `RacketCard` components.
+
+### 2.2. Racket Card (`RacketCard.vue`)
+
+- **Design**: An "ID Card" style layout.
+    - **Left Side**: Racket image.
+    - **Right Side**: Key specifications.
+- **Displayed Information**:
+    - Brand, Name.
+    - **Rating**: Displayed in the format: `★ 4.7 (26)`.
+    - **Tags**: Shows the top 4 most-voted tags. If there are more, they are indicated with `+n` (e.g., "+5").
+    - Key specs like Weight, Balance, etc.
+
+### 2.3. Detail Modal (`RacketDetail.vue`)
+
+- **Activation**: Opens as a modal window when a `RacketCard` is clicked.
+- **Content**:
+    - **Rating Distribution**: A bar chart visualizing the number of reviews for each star rating (1 to 5 stars).
+    - **Full Specifications**: All data from the `rackets` table.
+    - **Tag Input**: A UI for users to add their own tags to the racket. An autocomplete feature will assist with tag entry.
+
+### 2.4. Admin Page (`Dashboard.vue`)
+- **Purpose**: A dedicated page for administrators to manage racket data (CRUD operations).
+
+---
+
+## 3. Technical Specifications
+
+### 3.1. Tech Stack
+
+- **Frontend**: Vue.js 3 with Vite (Composition API, `<script setup>`, TypeScript).
+- **Styling**: Tailwind CSS.
+- **Backend & DB**: Supabase.
+- **Deployment**: GitHub repository linked to Cloudflare for CI/CD.
+
+### 3.2. Database Schema (Supabase)
+
+- **`rackets` table**:
+    - `id`, `brand`, `name`, `weight`, `balance`, `flex`, `max_tension`, `grip_size`, `frame_shape`, `colors` (Array), `image_url`, `rating_avg`, `review_count`, `rating_distribution` (JSON).
+- **`tags` table**:
+    - `id`, `name` (unique).
+- **`racket_tag_map` table**:
+    - `racket_id`, `tag_id`, `user_id` (to track who added the tag).
+
+### 3.3. Project Structure
+
+- **`src/views`**: Contains main page components (`RacketList.vue`, `Dashboard.vue`). Organized into `user` and `admin` subdirectories.
+- **`src/components`**: Contains reusable, smaller components (`RacketCard.vue`, `RacketDetail.vue`).
+
+### 3.4. Authentication
+
+- **Initial Method**: Google Login via Supabase Auth.
+- **Future Expansion**: Other social logins can be added later.
+
+---
+
+## 4. Development Plan & History
+
+- **[✓] Initial Project Setup**: Vue 3 + Vite + TypeScript.
+- **[✓] Component Creation**: Created `RacketList`, `RacketCard`, `RacketDetail`, and `Admin`.
+- **[✓] UI/UX Mockup**: Implemented the basic layout and styling for all components.
+- **[✓] File Structure Refactoring**: Organized page components into `src/views` and reusable components into `src/components`. Renamed `Admin.vue` to `Dashboard.vue`.
+- **[✓] Supabase Integration**: Connected the app to Supabase and fetched initial racket data.
+- **[✓] Implement Initial Screen Logic**: Modified `RacketList.vue` to be empty initially and load data based on user filter/search actions.
+- **[✓] Enhanced Filtering**: Added `balance` and `flex` filters. Standardized all filter options to uppercase.
+- **[Up Next] Implement Google Login**: Integrate Supabase Authentication for user-specific interactions.

@@ -75,7 +75,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import { supabase } from '../supabase'
+import { supabase } from '../../supabase'
 
 const props = defineProps({
   isOpen: Boolean,
