@@ -64,44 +64,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { onMounted, inject } from 'vue'
 import { useRouter } from 'vue-router'
-import { supabase } from '../../supabase'
 
 const router = useRouter()
-const rackets = ref([])
-const isLoading = ref(true)
-
-const BUCKET_NAME = 'BDMT01';
-const IMAGE_FOLDER = 'racket_storage';
-
-const fetchRackets = async () => {
-  isLoading.value = true
-  try {
-    const { data, error } = await supabase
-      .from('rackets')
-      .select('*')
-      .order('created_at', { ascending: false })
-    
-    if (error) throw error
-    rackets.value = data
-  } catch (err) {
-    console.error('Error fetching rackets:', err.message)
-  } finally {
-    isLoading.value = false
-  }
-}
+const { rackets, isLoading, fetchRackets, getRacketImage, deleteRacket } = inject('rackets')
 
 onMounted(() => {
   fetchRackets()
 })
-
-const getRacketImage = (fileName) => {
-  if (!fileName) return 'https://placehold.co/40x50/F3F4F6/9CA3AF?text=N/A'
-  if (fileName.startsWith('http')) return fileName
-  const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(`${IMAGE_FOLDER}/${fileName}`)
-  return data.publicUrl
-}
 
 const editRacket = (id) => {
   router.push(`/admin/racket/edit/${id}`)
@@ -110,22 +81,8 @@ const editRacket = (id) => {
 const confirmDelete = async (racket) => {
   if (confirm(`정말로 '${racket.name}' 라켓을 삭제하시겠습니까? 데이터베이스 기록과 함께 스토리지의 이미지 파일도 영구적으로 삭제됩니다.`)) {
     try {
-      if (racket.image_url && !racket.image_url.startsWith('http')) {
-        const filePath = `${IMAGE_FOLDER}/${racket.image_url}`
-        const { error: storageError } = await supabase.storage
-          .from(BUCKET_NAME)
-          .remove([filePath]);
-
-        if (storageError) {
-          console.warn(`Could not delete image: ${filePath}. Reason: ${storageError.message}`);
-        }
-      }
-
-      const { error: dbError } = await supabase.from('rackets').delete().eq('id', racket.id);
-      if (dbError) throw dbError;
-
+      await deleteRacket(racket)
       alert('삭제되었습니다.');
-      fetchRackets();
     } catch (err) {
       console.error('Delete operation failed:', err);
       alert(`삭제 과정에서 오류가 발생했습니다: ${err.message}`);

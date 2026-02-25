@@ -44,13 +44,13 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch } from 'vue'
+import { ref, watch, inject, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import RacketCard from '../../components/RacketCard.vue'
 import RacketFilter from '../../components/RacketFilter.vue'
-import { supabase } from '../../supabase'
 
 const router = useRouter()
+const { rackets, isLoading, fetchRackets } = inject('rackets')
 
 const filters = ref({
   brand: '',
@@ -61,49 +61,13 @@ const filters = ref({
   tags: []
 })
 
-const rackets = ref([])
-const isLoading = ref(false)
-const hasSearched = ref(false)
+const hasSearched = computed(() => {
+  return filters.value.brand || filters.value.weight || filters.value.balance || filters.value.flex || filters.value.search.trim() || filters.value.tags.length > 0;
+})
 
 const navigateToDetail = (id) => {
   router.push(`/racket/${id}`)
 }
-
-const fetchRackets = async () => {
-  const isFilterActive = filters.value.brand || filters.value.weight || filters.value.balance || filters.value.flex || filters.value.search.trim() || filters.value.tags.length > 0;
-
-  if (!isFilterActive) {
-    rackets.value = [];
-    hasSearched.value = false;
-    isLoading.value = false;
-    return;
-  }
-
-  isLoading.value = true;
-  hasSearched.value = true;
-
-  try {
-    let query = supabase.from('rackets').select('*');
-
-    if (filters.value.brand) query = query.eq('brand', filters.value.brand);
-    if (filters.value.weight) query = query.eq('weight', filters.value.weight);
-    if (filters.value.balance) query = query.eq('balance', filters.value.balance);
-    if (filters.value.flex) query = query.eq('flex', filters.value.flex);
-    if (filters.value.search.trim()) query = query.ilike('name', `%${filters.value.search.trim()}%`);
-    if (filters.value.tags.length > 0) query = query.contains('tags', filters.value.tags);
-
-    const { data, error } = await query.limit(20);
-
-    if (error) throw error;
-    rackets.value = data;
-
-  } catch (error) {
-    console.error('Error fetching rackets:', error.message);
-    rackets.value = [];
-  } finally {
-    isLoading.value = false;
-  }
-};
 
 const debounce = (func, delay) => {
     let timeoutId;
@@ -115,7 +79,7 @@ const debounce = (func, delay) => {
     };
 };
 
-watch(filters, debounce(fetchRackets, 300), {
+watch(filters, debounce(() => fetchRackets(filters.value), 300), {
   deep: true,
 });
 

@@ -38,7 +38,7 @@
                 accept="image/*" 
                 class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
               >
-              <p class="mt-1 text-xs text-gray-500">PNG, JPG, GIF 등 이미지 파일을 선택하세요.</p>
+              <p class="mt-1 text-xs text-gray-500">PNG, JPG, GIF 등 이미지 파일을 선택하세요. 동일 모델이 있다면 자동 완성됩니다.</p>
             </div>
           </div>
         </div>
@@ -113,9 +113,12 @@
 import { ref, reactive, onMounted, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '../../supabase'
+import useRackets from '../../composables/useRackets'
 
 const route = useRoute()
 const router = useRouter()
+const { getRacketImage } = useRackets()
+
 const isEdit = computed(() => !!route.params.id)
 const isSaving = ref(false)
 const hasDraft = ref(false)
@@ -142,10 +145,7 @@ const imagePreviewUrl = computed(() => {
     return URL.createObjectURL(imageFile.value)
   }
   if (form.image_url) {
-    if (form.image_url.startsWith('http')) return form.image_url
-    // 버킷과 폴더 구조에 맞게 수정
-    const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(`${IMAGE_FOLDER}/${form.image_url}`)
-    return data.publicUrl
+    return getRacketImage(form.image_url)
   }
   return 'https://placehold.co/300x300/F3F4F6/9CA3AF?text=NO+IMAGE'
 })
@@ -214,79 +214,80 @@ const saveRacket = async () => {
   isSaving.value = true
   
   try {
-    if (!isEdit.value) {
-      if (!form.weight?.trim()) form.weight = '4U';
-      if (!form.balance?.trim()) form.balance = 'HEAD HEAVY';
-      if (form.bal_point === null || form.bal_point === '') form.bal_point = 305;
-      if (!form.flex?.trim()) form.flex = 'STIFF';
-      if (!form.max_tension?.trim()) form.max_tension = '28';
-      if (!form.grip_size?.trim()) form.grip_size = 'G5';
-      if (!form.colors?.trim()) form.colors = 'White, Black';
-    }
-
     let imagePath = form.image_url;
 
+    // 1. Handle Image: Use existing, find existing, or upload new
     if (imageFile.value) {
-      const file = imageFile.value
-      const fileName = `${Date.now()}_${file.name}`
-      const filePath = `${IMAGE_FOLDER}/${fileName}`
+      // 1a. New image is uploaded: upload it and get the path.
+      const file = imageFile.value;
+      const racketName = form.name.toLowerCase().replace(/\s+/g, '_');
+      const fileExtension = file.name.split('.').pop();
+      const fileName = `${racketName}.${fileExtension}`;
+      const filePath = `${IMAGE_FOLDER}/${fileName}`;
       
-      // 버킷과 폴더 구조에 맞게 수정
       const { error: uploadError } = await supabase.storage
         .from(BUCKET_NAME)
-        .upload(filePath, file)
+        .upload(filePath, file, { upsert: true }); // Use upsert to overwrite
 
       if (uploadError) {
         throw new Error(`[이미지 업로드 실패] ${uploadError.message}`);
       }
-      // DB에는 파일 이름만 저장
-      imagePath = fileName;
+      imagePath = fileName; // DB stores only the file name
+    } else if (!isEdit.value && form.name) {
+      // 1b. No new image, creating new racket: Try to find an existing image from the same model.
+      const { data: existingRacket, error: findError } = await supabase
+        .from('rackets')
+        .select('image_url')
+        .ilike('name', form.name.trim())
+        .not('image_url', 'is', null)
+        .limit(1)
+        .single();
+
+      if (findError && findError.code !== 'PGRST116') { // Ignore 'single row not found' error
+        console.warn('Error while searching for existing racket image:', findError.message);
+      } else if (existingRacket?.image_url) {
+        imagePath = existingRacket.image_url;
+      }
     }
 
+    // 2. Prepare Racket Data
     const racketData = {
       name: form.name?.trim().toUpperCase(),
       brand: form.brand?.toUpperCase(),
-      image_url: imagePath,
+      image_url: imagePath, // This will be the new, found, or existing path
       weight: form.weight?.toUpperCase() || null,
       balance: form.balance?.toUpperCase() || null,
       bal_point: form.bal_point ? parseInt(form.bal_point, 10) : null,
       flex: form.flex?.toUpperCase() || null,
       max_tension: form.max_tension?.toString() || null,
       grip_size: form.grip_size?.toUpperCase() || null,
+      colors: [],
     };
 
     if (typeof form.colors === 'string' && form.colors.trim()) {
       racketData.colors = form.colors.split(',').map(c => c.trim().toUpperCase()).filter(Boolean);
-    } else {
-      racketData.colors = [];
     }
 
-    let response;
-    if (isEdit.value) {
-      response = await supabase
-        .from('rackets')
-        .update(racketData)
-        .eq('id', route.params.id);
-    } else {
-      response = await supabase
-        .from('rackets')
-        .insert([racketData]);
-    }
+    // 3. Insert or Update Database
+    const { error } = isEdit.value
+      ? await supabase.from('rackets').update(racketData).eq('id', route.params.id)
+      : await supabase.from('rackets').insert([racketData]);
 
-    if (response.error) {
-       console.error('Full Error Object:', response.error);
-       throw new Error(`[DB 저장 실패] ${response.error.message} (${response.error.code})`);
+    if (error) {
+       console.error('Full Error Object:', error);
+       throw new Error(`[DB 저장 실패] ${error.message} (${error.code})`);
     }
     
-    alert(isEdit.value ? '수정되었습니다.' : '등록되었습니다.')
-    if (!isEdit.value) clearDraft()
-    router.push('/admin/rackets')
+    // 4. Finalize
+    alert(isEdit.value ? '수정되었습니다.' : '등록되었습니다.');
+    if (!isEdit.value) clearDraft();
+    router.push('/admin/rackets');
 
   } catch (err) {
-    console.error('Final Save Error:', err)
-    alert(`오류 발생\n\n${err.message}`)
+    console.error('Final Save Error:', err);
+    alert(`오류 발생\n\n${err.message}`);
   } finally {
-    isSaving.value = false
+    isSaving.value = false;
   }
 }
 </script>

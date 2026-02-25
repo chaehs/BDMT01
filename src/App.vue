@@ -1,4 +1,3 @@
-
 <template>
   <div class="bg-gray-100 min-h-screen font-sans">
     <main class="max-w-screen-xl mx-auto px-4 md:px-10 py-10 md:py-20">
@@ -12,6 +11,11 @@
 </template>
 
 <script setup>
+import { provide } from 'vue'
+import useRackets from './composables/useRackets'
+
+const racketFunctions = useRackets()
+provide('rackets', racketFunctions)
 </script>
 
 <style>
