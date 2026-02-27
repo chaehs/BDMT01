@@ -220,9 +220,19 @@ const saveRacket = async () => {
     if (imageFile.value) {
       // 1a. New image is uploaded: upload it and get the path.
       const file = imageFile.value;
-      const racketName = form.name.toLowerCase().replace(/\s+/g, '_');
+      
+      // Sanitize and prepare parts for the filename
+      const baseName = form.name.toLowerCase().replace(/\s+/g, '_');
+      const weight = form.weight?.toLowerCase().replace(/\s+/g, '') || '';
+      const gripSize = form.grip_size?.toLowerCase().replace(/\s+/g, '') || '';
       const fileExtension = file.name.split('.').pop();
-      const fileName = `${racketName}.${fileExtension}`;
+
+      // Build the final filename
+      const fileNameParts = [baseName];
+      if (weight) fileNameParts.push(weight);
+      if (gripSize) fileNameParts.push(gripSize);
+      
+      const fileName = `${fileNameParts.join('_')}.${fileExtension}`;
       const filePath = `${IMAGE_FOLDER}/${fileName}`;
       
       const { error: uploadError } = await supabase.storage
@@ -255,12 +265,12 @@ const saveRacket = async () => {
       name: form.name?.trim().toUpperCase(),
       brand: form.brand?.toUpperCase(),
       image_url: imagePath, // This will be the new, found, or existing path
-      weight: form.weight?.toUpperCase() || null,
+      weight: form.weight?.toLowerCase() || null,
       balance: form.balance?.toUpperCase() || null,
       bal_point: form.bal_point ? parseInt(form.bal_point, 10) : null,
       flex: form.flex?.toUpperCase() || null,
       max_tension: form.max_tension?.toString() || null,
-      grip_size: form.grip_size?.toUpperCase() || null,
+      grip_size: form.grip_size?.toLowerCase() || null,
       colors: [],
     };
 

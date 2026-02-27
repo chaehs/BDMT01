@@ -1,93 +1,120 @@
-# Blueprint: Badminton Racket Review Platform (BDMT01)
+# Blueprint: 배드민턴 라켓 정보 및 후기 플랫폼 (BDMT01)
 
-## 1. Project Goal
+## 1. 프로젝트 개요
 
-A web application for badminton players to easily search for racket information, check real user reviews and ratings, and share their own feedback.
-
----
-
-## 2. Core Features & UI/UX
-
-### 2.1. Main Page (`RacketList.vue`)
-
-- **Initial State**: To minimize initial data transfer, the screen starts empty. It prompts users to select filters or search to load the racket list.
-- **Filtering**:
-    - **Brand**: Dropdown menu (e.g., YONEX, VICTOR, LI-NING).
-    - **Weight**: Dropdown menu (e.g., 3U, 4U, 5U).
-    - **Balance**: Dropdown for HEAD LIGHT, EVEN BALANCE, HEAD HEAVY.
-    - **Flex**: Dropdown for FLEXIBLE, MEDIUM, STIFF, EXTRA STIFF.
-    - **Tags**: Users can select from popular tags or search for them.
-- **Search**: A search bar for finding rackets by name.
-- **Racket List**: A grid of `RacketCard` components.
-
-### 2.2. Racket Card (`RacketCard.vue`)
-
-- **Design**: An "ID Card" style layout.
-    - **Left Side**: Racket image.
-    - **Right Side**: Key specifications.
-- **Displayed Information**:
-    - Brand, Name.
-    - **Rating**: Displayed in the format: `★ 4.7 (26)`.
-    - **Tags**: Shows the top 4 most-voted tags. If there are more, they are indicated with `+n` (e.g., "+5").
-    - Key specs like Weight, Balance, etc.
-
-### 2.3. Detail Modal (`RacketDetail.vue`)
-
-- **Activation**: Opens as a modal window when a `RacketCard` is clicked.
-- **Content**:
-    - **Rating Distribution**: A bar chart visualizing the number of reviews for each star rating (1 to 5 stars).
-    - **Full Specifications**: All data from the `rackets` table.
-    - **Tag Input**: A UI for users to add their own tags to the racket. An autocomplete feature will assist with tag entry.
-
-### 2.4. Admin Page (`Dashboard.vue`)
-
-- **Purpose**: A dedicated page for administrators to manage racket data (CRUD operations).
+배드민턴 사용자들이 라켓 정보를 쉽게 검색하고, 실제 사용자들의 후기와 평점을 확인하며, 자신의 의견을 공유할 수 있는 웹 애플리케이션을 구축합니다.
 
 ---
 
-## 3. Technical Specifications
+## 2. 핵심 기능 및 UI/UX
 
-### 3.1. Tech Stack
+### 2.1. USER 페이지
 
-- **Frontend**: Vue.js 3 with Vite (Composition API, `<script setup>`, TypeScript).
-- **Styling**: Tailwind CSS.
-- **Backend & DB**: Supabase.
-- **Deployment**: GitHub repository linked to Cloudflare for CI/CD.
+#### 2.1.1. 라켓 목록 (`RacketList.vue`)
 
-### 3.2. Database Schema (Supabase)
+- **초기 상태**: 초기 데이터 전송량 최소화를 위해 화면을 비워 둡니다. 필터나 검색을 통해 라켓 목록을 불러오도록 유도합니다.
+- **필터링**:
+    - 브랜드: 드롭다운 메뉴 (예: YONEX, VICTOR, LI-NING)
+    - 무게: 드롭다운 메뉴 (예: 3U, 4U, 5U)
+    - 밸런스: 드롭다운 메뉴 (HEAD LIGHT, EVEN BALANCE, HEAD HEAVY)
+    - 탄성: 드롭다운 메뉴 (FLEXIBLE, MEDIUM, STIFF, EXTRA STIFF)
+- **태그 검색**: 사용자는 인기 태그를 선택하거나 직접 검색하여 원하는 라켓을 찾을 수 있습니다.
+- **라켓 목록**: `RacketCard` 컴포넌트들을 2열 그리드 형태로 표시하며, 화면 크기에 따라 반응형으로 조절됩니다.
 
-- **`rackets` table**:
-    - `id`, `brand`, `name`, `weight`, `balance`, `flex`, `max_tension`, `grip_size`, `frame_shape`, `image_url`, `rating_avg`, `review_count`, `rating_distribution` (JSON).
-- **`tags` table**:
-    - `id`, `name` (unique).
-- **`racket_tag_map` table**:
-    - `racket_id`, `tag_id`, `user_id` (to track who added the tag).
-- **`colors` table**:
-    - `id`, `name`, `hex_code`.
-- **`racket_color_map` table**:
-    - `racket_id`, `color_id`.
+#### 2.1.2. 라켓 카드 (`RacketCard.vue`)
 
-### 3.3. Project Structure
+- **디자인**: 신분증처럼 이미지와 정보가 배치된 사각형 카드 디자인입니다.
+- **표시 정보**:
+    - 브랜드(BRAND), 이름(NAME) - 영어는 대문자로 표기
+    - **평점**: `★ 4.7(26)` 형식으로 표시 (1인 1평가 원칙).
+    - **사용자 태그**: 가장 많이 등록된 상위 4개 태그를 노출하고, 나머지는 `+5`와 같이 숫자로 표시합니다. 태그는 최대 6자로 제한됩니다.
+    - **핵심 스펙**: 무게(Weight), 밸런스(Balance) 등 주요 사양을 표시합니다.
 
-- **`src/views`**: Contains main page components (`RacketList.vue`, `Dashboard.vue`). Organized into `user` and `admin` subdirectories.
-- **`src/components`**: Contains reusable, smaller components (`RacketCard.vue`, `RacketDetail.vue`).
+#### 2.1.3. 라켓 상세 정보 (`RacketDetail.vue`)
 
-### 3.4. Authentication
+- **활성화**: 라켓 카드를 클릭하면 상세 정보가 모달 창으로 열립니다.
+- **콘텐츠**:
+    - **평점 분포**: 5점부터 1점까지 각 별점에 몇 명이 참여했는지 막대그래프로 시각화하여 보여줍니다.
+    - **전체 스펙**: `rackets` 테이블의 모든 정보를 상세히 표시합니다.
+    - **태그 입력**: 사용자가 직접 태그를 추가할 수 있는 UI를 제공합니다. 기존 태그와 중복을 피하기 위해 자동 완성 기능을 구현하여 입력을 유도합니다.
 
-- **Initial Method**: Google Login via Supabase Auth.
-- **Future Expansion**: Other social logins can be added later.
+### 2.2. ADMIN 페이지 (`Dashboard.vue`)
+
+- **목적**: 관리자가 라켓 데이터를 생성(Create), 조회(Read), 수정(Update), 삭제(Delete)할 수 있는 전용 페이지입니다.
 
 ---
 
-## 4. Development Plan & History
+## 3. 기술 명세
 
-- **[✓] Initial Project Setup**: Vue 3 + Vite + TypeScript.
-- **[✓] Component Creation**: Created `RacketList`, `RacketCard`, `RacketDetail`, and `Admin`.
-- **[✓] UI/UX Mockup**: Implemented the basic layout and styling for all components.
-- **[✓] File Structure Refactoring**: Organized page components into `src/views` and reusable components into `src/components`. Renamed `Admin.vue` to `Dashboard.vue`.
-- **[✓] Supabase Integration**: Connected the app to Supabase and fetched initial racket data.
-- **[✓] Implement Initial Screen Logic**: Modified `RacketList.vue` to be empty initially and load data based on user filter/search actions.
-- **[✓] Enhanced Filtering**: Added `balance` and `flex` filters. Standardized all filter options to uppercase.
-- **[✓] Basic Admin Form Submission**: Fixed a bug in the admin form to allow saving and updating basic racket information (excluding tags and colors) to the Supabase `rackets` table.
-- **[Up Next] Implement Google Login**: Integrate Supabase Authentication for user-specific interactions.
-- **[Postponed] Advanced Form Logic**: Implement saving for racket tags and colors, which involves multiple table interactions (`tags`, `colors`, `racket_tag_map`, `racket_color_map`).
+### 3.1. 기술 스택
+
+- **에디터**: 파이어베이스 스튜디오 (Firebase Studio)
+- **프론트엔드**: Vue.js 3 (Composition API, `<script setup>`), JavaScript
+- **백엔드 & DB**: Supabase
+- **스타일링**: Tailwind CSS
+
+### 3.2. 데이터베이스 스키마 (Supabase)
+
+- **`rackets`**: 라켓 기본 정보
+    - `id`, `brand`, `name`, `weight`, `balance`, `bal_point`, `flex`, `max_tension`, `grip_size`, `colors`, `image_url`
+- **`tags`**: 공통 태그 마스터 테이블
+- **`racket_tag_map`**: 라켓과 태그를 연결하는 매핑 테이블
+- **`racket_reviews`**: 라켓 리뷰 및 평점 정보
+- **`profiles`**: 사용자 프로필 정보
+    - `id` (UUID, Foreign Key to `auth.users.id`)
+    - `created_at` (Timestamptz)
+    - `email` (Text)
+    - `is_admin` (Boolean)
+
+### 3.3. 인증 (Authentication)
+
+- **초기 방식**: Supabase Auth를 통한 구글 로그인
+- **프로필 관리**: 신규 사용자 가입 시 트리거를 사용해 `profiles` 테이블에 자동으로 프로필 정보를 생성합니다.
+- **향후 확장**: 다른 소셜 로그인 방식 추가 고려
+
+### 3.4. 저장소 (Storage)
+
+- **폴더**: `racket_storage`
+- **파일명**: AI로 생성된 라켓 이미지를 `소문자_언더바` 형식으로 저장합니다. (예: `victor_auraspeed_90s.png`)
+
+### 3.5. 라우팅 (Routing)
+
+- **`/`**: 사용자 페이지 (`RacketList.vue`)
+- **`/admin`**: 관리자 대시보드 (`Dashboard.vue`) - `profiles.is_admin`이 `true`인 사용자만 접근 가능
+- **`/login`**: 로그인 페이지 (`Login.vue`)
+
+---
+
+## 4. 스타일링 및 배포
+
+- **스타일링**: Tailwind CSS를 사용하며, 빌드 후 스타일 적용 오류 발생 시 관련 설정 파일을 재확인합니다.
+- **배포**: GitHub 리포지토리를 Cloudflare와 연동하여 CI/CD를 구성합니다.
+
+---
+
+## 5. 개발 전략 및 로드맵
+
+### 5.1. 개발 전략
+
+- **최소 기능 제품(MVP)**: 핵심 기능만 빠르게 구현하여 웹 및 하이브리드 앱으로 출시 후, 사용자 피드백을 바탕으로 서비스를 점진적으로 보완하고 고도화합니다.
+
+### 5.2. 향후 계획
+
+- **네이티브 앱 전환**: 하이브리드 앱 출시 후 사용자 반응에 따라 네이티브 앱으로 전환을 고려합니다.
+- **소셜 기능 추가**: SVG 지도 기반의 동호인 분포 현황, 소모임 및 번개 모임 기능 등을 추가하여 커뮤니티 기능을 강화합니다.
+
+---
+
+## 6. 개발 계획 및 이력
+
+- **[✓] 초기 프로젝트 설정**: Vue 3 + Vite + JS
+- **[✓] 컴포넌트 생성**: `RacketList`, `RacketCard`, `RacketDetail`, `Admin`
+- **[✓] UI/UX 목업 구현**: 모든 컴포넌트의 기본 레이아웃 및 스타일링
+- **[✓] 파일 구조 리팩토링**: 페이지(`views`)와 재사용 컴포넌트(`components`) 분리
+- **[✓] Supabase 연동**: Supabase 클라이언트 설정 및 데이터 연동
+- **[✓] 초기 화면 로직 구현**: 필터/검색 시에만 데이터 로드
+- **[✓] 필터링 기능 강화**: `balance`, `flex` 필터 추가 및 옵션 대문자 통일
+- **[✓] 기본 정보 관리 기능**: 관리자 페이지에서 태그/색상을 제외한 기본 라켓 정보 저장 및 수정
+- **[✓] `appInfo.txt` 기반 블루프린트 업데이트**: 프로젝트 요구사항을 `blueprint.md`에 상세히 반영
+- **[✓] 사용자 인증 및 프로필 관리**: 구글 로그인, `profiles` 테이블 연동, 관리자 접근 제어 구현
+- **[보류] 고급 폼 로직**: 태그 및 색상 정보 저장을 위한 다중 테이블 상호작용 로직 구현
