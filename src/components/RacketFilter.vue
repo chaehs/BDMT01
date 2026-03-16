@@ -1,60 +1,65 @@
 <template>
   <div class="mb-12 max-w-4xl mx-auto space-y-6">
-    <div class="flex flex-wrap justify-center gap-4">
-      <!-- Brand Filter -->
-      <select 
-        :value="modelValue.brand" 
-        @change="updateFilter('brand', $event.target.value)"
-        class="px-4 py-2 bg-white border-2 border-gray-100 rounded-2xl shadow-sm focus:border-blue-500 outline-none transition-all text-sm font-bold text-gray-600"
-      >
-        <option value="">브랜드 전체</option>
-        <option v-for="brand in brands" :key="brand" :value="brand">{{ brand }}</option>
-      </select>
+    <!-- Filter controls row -->
+    <div class="flex items-center gap-4">
+      
+      <!-- Group of Select Filters -->
+      <div class="flex flex-wrap gap-2">
+        <!-- Brand Filter -->
+        <select 
+          :value="modelValue.brand" 
+          @change="updateFilter('brand', $event.target.value)"
+          class="px-4 py-2 bg-white border-2 border-gray-100 rounded-2xl shadow-sm focus:border-blue-500 outline-none transition-all text-sm font-bold text-gray-600"
+        >
+          <option value="">브랜드</option>
+          <option v-for="brand in brands" :key="brand" :value="brand">{{ brand }}</option>
+        </select>
 
-      <!-- Weight Filter -->
-      <select 
-        :value="modelValue.weight" 
-        @change="updateFilter('weight', $event.target.value)"
-        class="px-4 py-2 bg-white border-2 border-gray-100 rounded-2xl shadow-sm focus:border-blue-500 outline-none transition-all text-sm font-bold text-gray-600"
-      >
-        <option value="">무게 전체</option>
-        <option v-for="w in weights" :key="w" :value="w">{{ w }}</option>
-      </select>
+        <!-- Weight Filter -->
+        <select 
+          :value="modelValue.weight" 
+          @change="updateFilter('weight', $event.target.value)"
+          class="px-4 py-2 bg-white border-2 border-gray-100 rounded-2xl shadow-sm focus:border-blue-500 outline-none transition-all text-sm font-bold text-gray-600"
+        >
+          <option value="">무게</option>
+          <option v-for="w in weights" :key="w" :value="w">{{ w }}</option>
+        </select>
 
-      <!-- Balance Filter -->
-      <select 
-        :value="modelValue.balance" 
-        @change="updateFilter('balance', $event.target.value)"
-        class="px-4 py-2 bg-white border-2 border-gray-100 rounded-2xl shadow-sm focus:border-blue-500 outline-none transition-all text-sm font-bold text-gray-600"
-      >
-        <option value="">밸런스 전체</option>
-        <option v-for="b in balances" :key="b" :value="b">{{ b }}</option>
-      </select>
+        <!-- Balance Filter -->
+        <select 
+          :value="modelValue.balance" 
+          @change="updateFilter('balance', $event.target.value)"
+          class="px-4 py-2 bg-white border-2 border-gray-100 rounded-2xl shadow-sm focus:border-blue-500 outline-none transition-all text-sm font-bold text-gray-600"
+        >
+          <option value="">밸런스</option>
+          <option v-for="b in balances" :key="b" :value="b">{{ b }}</option>
+        </select>
 
-      <!-- Flex Filter -->
-      <select 
-        :value="modelValue.flex" 
-        @change="updateFilter('flex', $event.target.value)"
-        class="px-4 py-2 bg-white border-2 border-gray-100 rounded-2xl shadow-sm focus:border-blue-500 outline-none transition-all text-sm font-bold text-gray-600"
-      >
-        <option value="">탄성 전체</option>
-        <option v-for="f in flexes" :key="f" :value="f">{{ f }}</option>
-      </select>
+        <!-- Flex Filter -->
+        <select 
+          :value="modelValue.flex" 
+          @change="updateFilter('flex', $event.target.value)"
+          class="px-4 py-2 bg-white border-2 border-gray-100 rounded-2xl shadow-sm focus:border-blue-500 outline-none transition-all text-sm font-bold text-gray-600"
+        >
+          <option value="">탄성</option>
+          <option v-for="f in flexes" :key="f" :value="f">{{ f }}</option>
+        </select>
+      </div>
 
-      <!-- Search Input -->
-      <div class="relative flex-1 min-w-[200px]">
+      <!-- Search Input (takes up remaining space) -->
+      <div class="relative flex-1 min-w-[150px]">
         <input 
           :value="modelValue.search"
           @input="updateFilter('search', $event.target.value)"
           type="text" 
-          placeholder="라켓 명칭 검색..." 
+          placeholder="라켓명 검색..." 
           class="w-full pl-10 pr-4 py-2 bg-white border-2 border-gray-100 rounded-2xl shadow-sm focus:border-blue-500 outline-none transition-all text-sm font-medium"
         />
         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
       </div>
 
       <!-- Reset Button -->
-      <button @click="$emit('reset')" class="px-4 py-2 bg-gray-100 text-gray-500 rounded-2xl text-sm font-bold hover:bg-gray-200 transition-colors">
+      <button @click="$emit('reset')" class="flex-shrink-0 px-4 py-2 bg-gray-100 text-gray-500 rounded-2xl text-sm font-bold hover:bg-gray-200 transition-colors">
         초기화
       </button>
     </div>

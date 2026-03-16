@@ -13,11 +13,16 @@ export default function useRackets() {
     try {
       let query = supabase.from('rackets').select('*');
 
-      if (filters.brand) query = query.eq('brand', filters.brand);
-      if (filters.weight) query = query.eq('weight', filters.weight);
-      if (filters.balance) query = query.eq('balance', filters.balance);
-      if (filters.flex) query = query.eq('flex', filters.flex);
+      // Use ILIKE for case-insensitive text filtering
+      if (filters.brand) query = query.ilike('brand', filters.brand);
+      if (filters.weight) query = query.ilike('weight', filters.weight);
+      if (filters.balance) query = query.ilike('balance', filters.balance);
+      if (filters.flex) query = query.ilike('flex', filters.flex);
+
+      // For name search, use wildcard match
       if (filters.search && filters.search.trim()) query = query.ilike('name', `%${filters.search.trim()}%`);
+      
+      // For tags, check if the array contains the given tags
       if (filters.tags && filters.tags.length > 0) query = query.contains('tags', filters.tags);
 
       const { data, error } = await query.order('created_at', { ascending: false }).limit(20);

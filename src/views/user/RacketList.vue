@@ -28,7 +28,6 @@
           <RacketCard 
             :racket="racket" 
             class="w-full" 
-            @click="navigateToDetail(racket.id)"
           />
         </div>
       </div>
@@ -45,11 +44,9 @@
 
 <script setup>
 import { ref, watch, inject, computed } from 'vue'
-import { useRouter } from 'vue-router'
 import RacketCard from '../../components/RacketCard.vue'
 import RacketFilter from '../../components/RacketFilter.vue'
 
-const router = useRouter()
 const { rackets, isLoading, fetchRackets } = inject('rackets')
 
 const filters = ref({
@@ -64,10 +61,6 @@ const filters = ref({
 const hasSearched = computed(() => {
   return filters.value.brand || filters.value.weight || filters.value.balance || filters.value.flex || filters.value.search.trim() || filters.value.tags.length > 0;
 })
-
-const navigateToDetail = (id) => {
-  router.push(`/racket/${id}`)
-}
 
 const debounce = (func, delay) => {
     let timeoutId;
