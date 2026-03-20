@@ -5,6 +5,7 @@ import Dashboard from '../views/admin/Dashboard.vue';
 import RacketManage from '../views/admin/RacketManage.vue';
 import RacketForm from '../views/admin/RacketForm.vue';
 import Login from '../views/Login.vue';
+import Profile from '../views/user/Profile.vue'; // 프로필 컴포넌트 임포트
 import { supabase } from '../supabase';
 
 const routes = [
@@ -22,6 +23,12 @@ const routes = [
     path: '/login',
     name: 'Login',
     component: Login,
+  },
+  {
+    path: '/profile', // 프로필 경로 추가
+    name: 'Profile',
+    component: Profile,
+    meta: { requiresAuth: true }, // 로그인 필수
   },
   {
     path: '/admin',

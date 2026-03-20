@@ -10,6 +10,7 @@ export default function useRackets() {
 
   const fetchRackets = async (filters = {}) => {
     isLoading.value = true;
+    rackets.value = [];
     try {
       let query = supabase.from('rackets').select('*');
 

@@ -8,12 +8,23 @@
 
 ▢ ADMIN 페이지
 
+
+▢ PROFILE 페이지
+  ◯ 로그인 직후 프로필 필수항목 미입력 상태인 경우 프로필 입력페이지로 이동
+  ◯ 프로필 정보 : 회원등급(role), 닉네임(nickname), 성별(gender), 급수(level), 사용라켓(main_racket), 선호무게(pref_weight), 선호밸런스(pref_balance)
+  ◯ 닉네임(빈칸, 나중에 DB 중복확인), 성별(M, F)
+  ◯ 급수(S, AA, A, B, C, D, E, F, X)
+  ◯ 사용라켓(일단 빈칸), 선호무게(3U, 4U, 5U, 6U, 7U)
+  ◯ 선호밸런스(Head Heavy, Even Balance, Head Light) -> DB저장시 hh, eb, hl
+  ◯ 선호포지션(Front, Back, All) -> DB저장시 front, back, all
+
 ▢ USER 페이지
   ◯ 라켓정보를 카드보기 형식으로 렌더링
   ◯ 사각형 카드 안에 라켓관련 다음의 정보를 제공(supabase 데이터 수신)
     - 카드보기시 가능하면 2열로 정렬하고 반응형일 것
     - 신분증 처럼 이미지와 정보 배치
-    - 라켓정보 : 브랜드(brand), 이름(name), 무게(weight), 밸런스(balance), 밸런스포인트(bal_point), 탄성(flex), 스트링 최대장력(max_tension), 그립두께(grip_size), 대표색상(colors) 1~2가지
+    - 라켓카드에 스펙, 태그 모두 표기
+    - 라켓 정보 : 브랜드(brand), 이름(name), 무게(weight), 밸런스(balance), 밸런스포인트(bal_point), 탄성(flex), 스트링 최대장력(max_tension), 그립두께(grip_size), 대표색상(colors) 1~2가지
       • 영어는 무조건 대문자
     - 라켓이미지
     - 평점
@@ -31,6 +42,7 @@
 ▢ 에디터 : 파이어베이스 스튜디오
 ▢ 프론트엔드 : vue3.js(composition API), 타입스크립트 x
 ▢ 백엔드 : supabase
+  ◯ 숫자, 영소문자, 언더바로 저장
   ◯ 모든 장비가 공유하는 하나의 tags 테이블을 만들고, 각 장비(라켓, 신발 등)와 연결하는 매핑 테이블을 별도로 두는 방식
     - 라켓 테이블 : rackets, 공통 태그 마스터 : tags, 라켓 태그 연결 테이블 : racket_tag_map, 라켓 리뷰 테이블 : racket_reviews
     - rackets 테이블 컬럼 : 브랜드(brand), 이름(name), 무게(weight), 밸런스(balance), 밸런스포인트(bal_point), 탄성(flex), 스트링 최대장력(max_tension), 그립두께(grip_size), 대표색상(colors) 1~2가지, 이미지링크(image_url)
@@ -55,10 +67,7 @@
 
 
 
-// 내가할일(md파일 반영 x)
-- supabase RLS 권한 정하기, 일단 설정은 완료, 추후 수정
-- 로그인 직후 프로필 입력 페이지
-- 필수/선택항목 정하기
-- 제품별 상세보기에서 건의하기 만들기
-- 라켓 클릭시 상세페이지 없애고 카드에 스펙 모두 표기
-- 태그 입력은 + 버튼 눌러서 입력
+▢ 내가할일(md파일 반영 x)
+  ◯ supabase RLS 권한 설정(role별)
+  ◯ 태그 입력은 + 버튼 눌러서 
+  
