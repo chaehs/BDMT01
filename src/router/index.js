@@ -1,10 +1,12 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import { h } from 'vue'; 
 import RacketList from '../views/user/RacketList.vue';
 import RacketDetail from '../views/user/RacketDetail.vue';
 import Dashboard from '../views/admin/Dashboard.vue';
 import RacketManage from '../views/admin/RacketManage.vue';
 import RacketForm from '../views/admin/RacketForm.vue';
 import Login from '../views/Login.vue';
+import Profile from '../views/user/Profile.vue'; // 프로필 컴포넌트 임포트
 import { supabase } from '../supabase';
 
 const routes = [
@@ -24,14 +26,27 @@ const routes = [
     component: Login,
   },
   {
+    path: '/profile',
+    name: 'Profile',
+    component: Profile,
+    meta: { requiresAuth: true }, // 로그인 필수
+  },
+  {
     path: '/admin',
     component: Dashboard,
-    meta: { requiresAuth: true, requiresAdmin: true }, // 관리자 역할 필요!
+    meta: { requiresAuth: true, requiresAdmin: true }, 
     children: [
       {
         path: '',
         name: 'AdminDashboard',
-        component: { template: '<div class="p-6"><h2 class="text-2xl font-bold">대시보드 통계</h2><p class="text-gray-500 mt-2">준비 중입니다.</p></div>' }
+        component: { 
+          render() { 
+            return h('div', { class: 'p-6' }, [
+              h('h2', { class: 'text-2xl font-bold' }, '대시보드 통계'),
+              h('p', { class: 'text-gray-500 mt-2' }, '준비 중입니다.')
+            ])
+          } 
+        }
       },
       {
         path: 'rackets',
@@ -57,7 +72,7 @@ const router = createRouter({
   routes,
 });
 
-// 네비게이션 가드 강화!
+// 네비게이션 가드
 router.beforeEach(async (to, from, next) => {
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
   const requiresAdmin = to.matched.some(record => record.meta.requiresAdmin);
@@ -65,36 +80,34 @@ router.beforeEach(async (to, from, next) => {
 
   if (requiresAdmin) {
     if (user) {
-      // 'profiles' 테이블에서 사용자 프로필을 가져옵니다.
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', user.id)
         .single();
 
-      if (error && error.code !== 'PGRST116') { // PGRST116: single() did not return a record
+      if (error && error.code !== 'PGRST116') {
         console.error('Error fetching profile:', error);
         alert('프로필 정보를 가져오는 중 오류가 발생했습니다.');
         next('/');
         return;
       }
 
-      // role이 'admin'인지 확인합니다.
       if (profile && profile.role === 'admin') {
-        next(); // 관리자면 통과
+        next();
       } else {
         alert('관리자만 접근할 수 있습니다.');
-        next('/'); // 관리자가 아니면 메인 페이지로 리디렉션
+        next('/');
       }
     } else {
       alert('로그인이 필요합니다.');
-      next({ name: 'Login' }); // 로그인하지 않았다면 로그인 페이지로
+      next({ name: 'Login' });
     }
   } else if (requiresAuth) {
     if (user) {
-      next(); // 로그인했다면 통과
+      next();
     } else {
-      next({ name: 'Login' }); // 로그인 안했다면 로그인 페이지로
+      next({ name: 'Login' });
     }
   } else {
     next();
