@@ -35,7 +35,7 @@
     - 라켓 테이블 : rackets, 공통 태그 마스터 : tags, 라켓 태그 연결 테이블 : racket_tag_map, 라켓 리뷰 테이블 : racket_reviews
     - rackets 테이블 컬럼 : 브랜드(brand), 이름(name), 무게(weight), 밸런스(balance), 밸런스포인트(bal_point), 탄성(flex), 스트링 최대장력(max_tension), 그립두께(grip_size), 대표색상(colors) 1~2가지, 이미지링크(image_url)
   ◯ Auth : 구글 로그인 구현 후 다른 방식 추후 구현
-    - 프로필 테이블 : profiles, 컬럼 : id[uuid], created_at[timestamptz], email[text], is_admin[bool]
+    - 프로필 테이블 : profiles, 컬럼 : id[uuid], created_at[timestamptz], email[text], nickname[text], level[text], role[text], main_racket[text], pref_racket[text], pref_balance[text], pref_position[text], gender[text]
   ◯ Storage : racket_storage 폴더에 AI 라켓이미지 저장, 저장되는 파일명은 소문자+언더바
   ◯ 라우터 사용 : admin, user, login
 

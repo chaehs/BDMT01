@@ -9,8 +9,8 @@
 
     <!-- Racket Display Area -->
     <div class="mt-12">
-      <!-- 1. Initial State -->
-      <div v-if="!hasSearched" class="text-center py-20 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
+      <!-- 1. Initial State (No filters applied) -->
+      <div v-if="!hasActiveFilters" class="text-center py-20 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
         <span class="text-5xl block mb-4">🏸</span>
         <h2 class="text-2xl font-bold text-gray-800">라켓을 찾아보세요!</h2>
         <p class="text-gray-500 font-medium mt-2">상단의 필터를 사용하거나 검색하여 원하는 라켓을 찾을 수 있습니다.</p>
@@ -35,7 +35,7 @@
       <!-- 4. No Results State -->
       <div v-else class="text-center py-20 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
         <span class="text-4xl block mb-4">🤔</span>
-        <p class="text-gray-600 font-bold text-lg">검색 결과가 없습니다.</p>
+        <p class="text-gray-600 font-bold text-lg">라켓을 찾을 수 없습니다.</p>
         <p class="text-gray-500 font-medium mt-1">다른 필터나 검색어를 시도해보세요.</p>
       </div>
     </div>
@@ -58,8 +58,14 @@ const filters = ref({
   tags: []
 })
 
-const hasSearched = computed(() => {
-  return filters.value.brand || filters.value.weight || filters.value.balance || filters.value.flex || filters.value.search.trim() || filters.value.tags.length > 0;
+// 필터가 하나라도 활성화되어 있는지 확인하는 계산된 속성
+const hasActiveFilters = computed(() => {
+  return filters.value.brand || 
+         filters.value.weight || 
+         filters.value.balance || 
+         filters.value.flex || 
+         filters.value.search.trim() || 
+         filters.value.tags.length > 0;
 })
 
 const debounce = (func, delay) => {
@@ -72,9 +78,19 @@ const debounce = (func, delay) => {
     };
 };
 
-watch(filters, debounce(() => fetchRackets(filters.value), 300), {
-  deep: true,
-});
+const debouncedFetch = debounce((newFilters) => {
+    fetchRackets(newFilters);
+}, 300);
+
+watch(filters, (newFilters) => {
+    if (hasActiveFilters.value) {
+        isLoading.value = true;
+        debouncedFetch(newFilters);
+    } else {
+        // 필터가 모두 비워지면 목록을 초기화
+        rackets.value = [];
+    }
+}, { deep: true });
 
 const resetFilters = () => {
   filters.value = {

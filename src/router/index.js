@@ -68,7 +68,7 @@ router.beforeEach(async (to, from, next) => {
       // 'profiles' 테이블에서 사용자 프로필을 가져옵니다.
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('is_admin')
+        .select('role')
         .eq('id', user.id)
         .single();
 
@@ -79,8 +79,8 @@ router.beforeEach(async (to, from, next) => {
         return;
       }
 
-      // is_admin이 true인지 확인합니다.
-      if (profile && profile.is_admin) {
+      // role이 'admin'인지 확인합니다.
+      if (profile && profile.role === 'admin') {
         next(); // 관리자면 통과
       } else {
         alert('관리자만 접근할 수 있습니다.');
@@ -95,7 +95,8 @@ router.beforeEach(async (to, from, next) => {
       next(); // 로그인했다면 통과
     } else {
       next({ name: 'Login' }); // 로그인 안했다면 로그인 페이지로
-    }n  } else {
+    }
+  } else {
     next();
   }
 });
