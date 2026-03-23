@@ -6,28 +6,22 @@
           <router-link to="/" class="hover:text-blue-600 transition-colors">BDMT</router-link>
         </div>
         <div class="flex items-center space-x-5">
-          <!-- Admin Button -->
           <router-link 
             :to="{ name: 'AdminDashboard' }" 
-            v-if="isAdmin"
+            v-if="authStore.isAdmin"
             class="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
           >
             관리자
           </router-link>
           
-          <!-- User Actions -->
-          <div v-if="user" class="flex items-center space-x-4">
-            <span class="text-sm text-gray-600 hidden sm:inline">{{ user.email }}</span>
-            
-            <!-- Profile Button -->
+          <div v-if="authStore.user" class="flex items-center space-x-4">
+            <span class="text-sm text-gray-600 hidden sm:inline">{{ authStore.user.email }}</span>
             <router-link 
               :to="{ name: 'Profile' }"
-              class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm font-semibold hover:bg-gray-200 transition-all shadow-sm"
+              class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm font-semibold hover:bg-200 transition-all shadow-sm"
             >
               프로필
             </router-link>
-            
-            <!-- Logout Button -->
             <button 
               @click="handleLogout" 
               class="px-3 py-1.5 bg-red-500 text-white rounded-md text-sm font-semibold hover:bg-red-600 transition-all shadow-sm"
@@ -36,7 +30,6 @@
             </button>
           </div>
           
-          <!-- Login Button -->
           <div v-else>
             <router-link 
               :to="{ name: 'Login' }" 
@@ -56,43 +49,27 @@
 </template>
 
 <script setup>
-import { ref, onMounted, provide } from 'vue'
+import { onMounted, provide } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from './supabase'
-import { useAuth } from './composables/useAuth'
+import { useAuthStore } from './stores/auth'
 import useRackets from './composables/useRackets'
 
-const { user, logout } = useAuth()
-const isAdmin = ref(false)
+const authStore = useAuthStore()
 const router = useRouter()
 
-const checkAdmin = async () => {
-  if (user.value) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.value.id)
-      .single();
-    isAdmin.value = profile?.role === 'admin';
-  } else {
-    isAdmin.value = false;
-  }
-}
-
 const handleLogout = async () => {
-  await logout()
+  await supabase.auth.signOut()
   alert('성공적으로 로그아웃되었습니다.')
   router.push('/')
 }
 
+// 기존 inject 호환을 위해 유지 (점진적 전환용)
 const racketFunctions = useRackets()
 provide('rackets', racketFunctions)
 
 onMounted(() => {
-  checkAdmin()
-  supabase.auth.onAuthStateChange(() => {
-    checkAdmin()
-  })
+  authStore.init()
 })
 </script>
 
@@ -100,7 +77,5 @@ onMounted(() => {
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
 body {
   font-family: 'Noto Sans KR', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 </style>

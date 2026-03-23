@@ -1,6 +1,6 @@
 <template>
   <div class="w-full">
-    <!-- Filter Section (Extracted to Component) -->
+    <!-- Filter Section -->
     <RacketFilter 
       v-model="filters"
       @reset="resetFilters"
@@ -9,7 +9,7 @@
 
     <!-- Racket Display Area -->
     <div class="mt-12">
-      <!-- 1. Initial State (No filters applied) -->
+      <!-- 1. Initial State -->
       <div v-if="!hasActiveFilters" class="text-center py-20 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
         <span class="text-5xl block mb-4">🏸</span>
         <h2 class="text-2xl font-bold text-gray-800">라켓을 찾아보세요!</h2>
@@ -17,14 +17,14 @@
       </div>
 
       <!-- 2. Loading State -->
-      <div v-else-if="isLoading" class="text-center py-20">
+      <div v-else-if="racketStore.isLoading" class="text-center py-20">
         <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-500 mx-auto"></div>
         <p class="text-gray-500 font-medium mt-4">데이터를 불러오는 중입니다...</p>
       </div>
 
-      <!-- 3. Racket Grid (Results Found) -->
-      <div v-else-if="rackets.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-y-12 gap-x-10 lg:gap-x-16">
-        <div v-for="racket in rackets" :key="racket.id" class="flex justify-center">
+      <!-- 3. Racket Grid -->
+      <div v-else-if="racketStore.rackets && racketStore.rackets.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-y-12 gap-x-10 lg:gap-x-16">
+        <div v-for="racket in racketStore.rackets" :key="racket.id" class="flex justify-center">
           <RacketCard 
             :racket="racket" 
             class="w-full" 
@@ -43,11 +43,12 @@
 </template>
 
 <script setup>
-import { ref, watch, inject, computed } from 'vue'
+import { ref, watch, computed } from 'vue'
 import RacketCard from '../../components/RacketCard.vue'
 import RacketFilter from '../../components/RacketFilter.vue'
+import { useRacketStore } from '../../stores/racket'
 
-const { rackets, isLoading, fetchRackets } = inject('rackets')
+const racketStore = useRacketStore()
 
 const filters = ref({
   brand: '',
@@ -58,14 +59,13 @@ const filters = ref({
   tags: []
 })
 
-// 필터가 하나라도 활성화되어 있는지 확인하는 계산된 속성
+// 필터가 하나라도 활성화되어 있는지 확인하는 계산된 속성 (태그는 현재 비활성화)
 const hasActiveFilters = computed(() => {
   return filters.value.brand || 
          filters.value.weight || 
          filters.value.balance || 
          filters.value.flex || 
-         filters.value.search.trim() || 
-         filters.value.tags.length > 0;
+         (filters.value.search && filters.value.search.trim());
 })
 
 const debounce = (func, delay) => {
@@ -79,16 +79,14 @@ const debounce = (func, delay) => {
 };
 
 const debouncedFetch = debounce((newFilters) => {
-    fetchRackets(newFilters);
+    racketStore.fetchRackets(newFilters);
 }, 300);
 
 watch(filters, (newFilters) => {
     if (hasActiveFilters.value) {
-        isLoading.value = true;
         debouncedFetch(newFilters);
     } else {
-        // 필터가 모두 비워지면 목록을 초기화
-        rackets.value = [];
+        racketStore.rackets = [];
     }
 }, { deep: true });
 
@@ -104,6 +102,7 @@ const resetFilters = () => {
 }
 
 const toggleTag = (tag) => {
+  if (!filters.value.tags) filters.value.tags = [];
   const index = filters.value.tags.indexOf(tag)
   if (index > -1) {
     filters.value.tags.splice(index, 1)

@@ -26,17 +26,17 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-50">
-          <tr v-if="isLoading" class="text-center py-20">
+          <tr v-if="racketStore.isLoading" class="text-center py-20">
             <td colspan="5" class="p-10 text-gray-400 font-bold">데이터를 불러오는 중...</td>
           </tr>
-          <tr v-else-if="rackets.length === 0" class="text-center py-20">
+          <tr v-else-if="racketStore.rackets.length === 0" class="text-center py-20">
             <td colspan="5" class="p-10 text-gray-400 font-bold">등록된 라켓이 없습니다.</td>
           </tr>
-          <tr v-for="racket in rackets" :key="racket.id" class="hover:bg-blue-50/30 transition-colors">
+          <tr v-for="racket in racketStore.rackets" :key="racket.id" class="hover:bg-blue-50/30 transition-colors">
             <td class="p-5">
               <div class="flex items-center gap-4">
                 <div class="w-10 h-12 bg-gray-50 rounded-lg flex-shrink-0 flex items-center justify-center p-1 border border-gray-100">
-                  <img :src="getRacketImage(racket.image_url)" class="w-full h-full object-contain" :alt="racket.name">
+                  <img :src="racketStore.getRacketImage(racket.image_url)" class="w-full h-full object-contain" :alt="racket.name">
                 </div>
                 <span class="font-black text-gray-900">{{ racket.name }}</span>
               </div>
@@ -48,7 +48,7 @@
             <td class="p-5">
               <div class="flex items-center gap-1">
                 <span class="text-yellow-400">★</span>
-                <span class="font-bold text-gray-800">{{ racket.rating || 0 }}</span>
+                <span class="font-bold text-gray-800">{{ racket.avg_rating || 0 }}</span>
                 <span class="text-gray-400 text-xs">({{ racket.review_count || 0 }})</span>
               </div>
             </td>
@@ -64,14 +64,15 @@
 </template>
 
 <script setup>
-import { onMounted, inject } from 'vue'
+import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useRacketStore } from '../../stores/racket'
 
 const router = useRouter()
-const { rackets, isLoading, fetchRackets, getRacketImage, deleteRacket } = inject('rackets')
+const racketStore = useRacketStore()
 
 onMounted(() => {
-  fetchRackets()
+  racketStore.fetchRackets()
 })
 
 const editRacket = (id) => {
@@ -81,7 +82,7 @@ const editRacket = (id) => {
 const confirmDelete = async (racket) => {
   if (confirm(`정말로 '${racket.name}' 라켓을 삭제하시겠습니까? 데이터베이스 기록과 함께 스토리지의 이미지 파일도 영구적으로 삭제됩니다.`)) {
     try {
-      await deleteRacket(racket)
+      await racketStore.deleteRacket(racket)
       alert('삭제되었습니다.');
     } catch (err) {
       console.error('Delete operation failed:', err);

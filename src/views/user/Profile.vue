@@ -123,8 +123,10 @@
 import { ref, reactive, onMounted } from 'vue';
 import { supabase } from '../../supabase';
 import { useRouter } from 'vue-router';
+import { useAuthStore } from '../../stores/auth';
 
 const router = useRouter();
+const authStore = useAuthStore();
 const isSaving = ref(false);
 
 const profile = reactive({
@@ -150,12 +152,11 @@ const levelOptions = [
 ];
 
 onMounted(async () => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (user) {
-    const { data: profileData, error } = await supabase
+  if (authStore.user) {
+    const { data: profileData } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', user.id)
+      .eq('id', authStore.user.id)
       .single();
 
     if (profileData) {
@@ -169,13 +170,12 @@ const updateProfile = async () => {
   isSaving.value = true;
 
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('로그인이 필요합니다.');
+    if (!authStore.user) throw new Error('로그인이 필요합니다.');
 
     const { error } = await supabase
       .from('profiles')
       .update(profile)
-      .eq('id', user.id);
+      .eq('id', authStore.user.id);
 
     if (error) throw error;
     
@@ -189,7 +189,3 @@ const updateProfile = async () => {
   }
 };
 </script>
-
-<style scoped>
-/* Profile specific styles if needed */
-</style>
