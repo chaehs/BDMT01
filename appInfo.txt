@@ -8,6 +8,9 @@
 
 ▢ ADMIN 페이지
 
+▢ PROFILE 페이지
+
+
 ▢ USER 페이지
   ◯ 라켓정보를 카드보기 형식으로 렌더링
   ◯ 사각형 카드 안에 라켓관련 다음의 정보를 제공(supabase 데이터 수신)
@@ -31,13 +34,13 @@
 ▢ 에디터 : 파이어베이스 스튜디오
 ▢ 프론트엔드 : vue3.js(composition API), 타입스크립트 x
 ▢ 백엔드 : supabase
-  ◯ 모든 장비가 공유하는 하나의 tags 테이블을 만들고, 각 장비(라켓, 신발 등)와 연결하는 매핑 테이블을 별도로 두는 방식
-    - 라켓 테이블 : rackets, 공통 태그 마스터 : tags, 라켓 태그 연결 테이블 : racket_tag_map, 라켓 리뷰 테이블 : racket_reviews
-    - rackets 테이블 컬럼 : 브랜드(brand), 이름(name), 무게(weight), 밸런스(balance), 밸런스포인트(bal_point), 탄성(flex), 스트링 최대장력(max_tension), 그립두께(grip_size), 대표색상(colors) 1~2가지, 이미지링크(image_url)
   ◯ Auth : 구글 로그인 구현 후 다른 방식 추후 구현
-    - 프로필 테이블 : profiles, 컬럼 : id[uuid], created_at[timestamptz], email[text], nickname[text], level[text], role[text], main_racket[text], pref_weight[text], pref_balance[text], pref_position[text], gender[text]
-  ◯ tags 테이블 컬럼 : name[text]
-  ◯ racket_tag_map  테이블 컬럼 : racket_id[text], tag_id[text]
+  ◯ 테이블별 컬럼
+    - rackets : brand[text], name[text], weight[text], balance[text], bal_point[text], flex[text], max_tension[int4], grip_size[text], colors[text[]], image_url[text]
+    - profiles : nickname[text], level[text], role[text], main_racket[text], pref_weight[text], pref_balance[text], pref_position[text], gender[text]
+    - tags : name[text]
+    - racket_tag_map : racket_id[text], tag_id[text]
+    - racket_reviews : racket_id[text], user_id[text], rating[int4]
   ◯ Storage : racket_storage 폴더에 AI 라켓이미지 저장, 저장되는 파일명은 소문자+언더바
   ◯ 라우터 사용 : admin, user, login
 
@@ -59,8 +62,5 @@
 
 // 내가할일(md파일 반영 x)
 - supabase RLS 권한 정하기, 일단 설정은 완료, 추후 수정
-- 로그인 직후 프로필 입력 페이지
-- 필수/선택항목 정하기
 - 제품별 상세보기에서 건의하기 만들기
-- 라켓 클릭시 상세페이지 없애고 카드에 스펙 모두 표기
 - 태그 입력은 + 버튼 눌러서 입력

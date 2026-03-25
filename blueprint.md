@@ -15,6 +15,7 @@
 ### 3.1 `profiles` 테이블
 - 사용자의 기본 정보 및 배드민턴 성향 저장.
 - 주요 컬럼: `nickname`, `level`, `gender`, `role`, `main_racket`, `pref_weight`, `pref_balance`, `pref_position`.
+- **선호 포지션 옵션**: `전위`, `올라운드`, `후위` (기존 '공격형', '수비형' 제외)
 
 ### 3.2 `rackets` 테이블
 - 라켓 상세 스펙 및 이미지 정보 저장.

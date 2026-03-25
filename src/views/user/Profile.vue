@@ -59,7 +59,7 @@
             <div class="flex gap-2">
               <button 
                 type="button" 
-                v-for="p in ['공격형(후위)', '올라운드', '수비형(전위)']" :key="p"
+                v-for="p in ['전위', '올라운드', '후위']" :key="p"
                 @click="profile.pref_position = p"
                 :class="[
                   'flex-1 py-3 px-2 rounded-xl text-xs font-bold border-2 transition-all',
