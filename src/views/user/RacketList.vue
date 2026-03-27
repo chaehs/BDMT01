@@ -23,8 +23,8 @@
       </div>
 
       <!-- 3. Racket Grid -->
-      <div v-else-if="racketStore.rackets && racketStore.rackets.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-y-12 gap-x-10 lg:gap-x-16">
-        <div v-for="racket in racketStore.rackets" :key="racket.id" class="flex justify-center">
+      <div v-else-if="filteredRackets.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-y-12 gap-x-10 lg:gap-x-16">
+        <div v-for="racket in filteredRackets" :key="racket.id" class="flex justify-center">
           <RacketCard 
             :racket="racket" 
             class="w-full" 
@@ -59,13 +59,27 @@ const filters = ref({
   tags: []
 })
 
-// 필터가 하나라도 활성화되어 있는지 확인하는 계산된 속성 (태그는 현재 비활성화)
+// 모든 필터링을 통과한 라켓 목록을 계산합니다.
+const filteredRackets = computed(() => {
+  const selectedTags = filters.value.tags;
+  if (!selectedTags || selectedTags.length === 0) {
+    return racketStore.rackets;
+  }
+  
+  return racketStore.rackets.filter(racket => {
+    if (!racket.tags || racket.tags.length === 0) return false;
+    const racketTagNames = racket.tags.map(t => t.name);
+    return selectedTags.every(selectedTag => racketTagNames.includes(selectedTag));
+  });
+});
+
 const hasActiveFilters = computed(() => {
   return filters.value.brand || 
          filters.value.weight || 
          filters.value.balance || 
          filters.value.flex || 
-         (filters.value.search && filters.value.search.trim());
+         (filters.value.search && filters.value.search.trim()) ||
+         (filters.value.tags && filters.value.tags.length > 0);
 })
 
 const debounce = (func, delay) => {
@@ -82,11 +96,24 @@ const debouncedFetch = debounce((newFilters) => {
     racketStore.fetchRackets(newFilters);
 }, 300);
 
-watch(filters, (newFilters) => {
+watch(filters, (newFilters, oldFilters) => {
+    const nonTagFiltersChanged = (
+      newFilters.brand !== oldFilters.brand ||
+      newFilters.weight !== oldFilters.weight ||
+      newFilters.balance !== oldFilters.balance ||
+      newFilters.flex !== oldFilters.flex ||
+      newFilters.search !== oldFilters.search
+    );
+
     if (hasActiveFilters.value) {
+      // 1. 태그 외 다른 필터가 변경되었거나
+      // 2. 현재 라켓 데이터가 없는 상태에서 필터가 활성화된 경우 (최초 태그 클릭 포함)
+      if (nonTagFiltersChanged || racketStore.rackets.length === 0) {
         debouncedFetch(newFilters);
+      }
     } else {
-        racketStore.rackets = [];
+      // 필터가 모두 비워지면 데이터도 비웁니다.
+      racketStore.rackets = [];
     }
 }, { deep: true });
 

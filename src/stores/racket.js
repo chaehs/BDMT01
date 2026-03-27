@@ -25,8 +25,10 @@ export const useRacketStore = defineStore('racket', () => {
       if (filters.search && filters.search.trim()) {
         query = query.ilike('name', `%${filters.search.trim()}%`);
       }
+      
+      // 태그 필터는 프론트엔드에서 처리하므로 여기서는 쿼리하지 않습니다.
 
-      const { data, error } = await query.order('name', { ascending: true }).limit(30);
+      const { data, error } = await query.order('name', { ascending: true }).limit(50); // 데이터 양을 늘려 더 많은 결과를 가져옵니다.
 
       if (error) throw error;
       rackets.value = data || [];

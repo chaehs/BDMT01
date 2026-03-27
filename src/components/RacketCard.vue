@@ -31,11 +31,8 @@
       </div>
     </div>
 
-    <!-- Bottom Section: Tag Add Button + Tags -->
+    <!-- Bottom Section: Tags -->
     <div class="mt-4 pt-4 border-t border-gray-100 flex items-center gap-3">
-        <button class="flex-shrink-0 flex items-center justify-center w-8 h-8 bg-green-100 text-green-600 rounded-full hover:bg-green-200 transition-colors">
-            <span class="font-bold text-xl">+</span>
-        </button>
         <div class="flex flex-wrap gap-1.5 flex-grow">
             <p v-if="!racket.tags || racket.tags.length === 0" class="text-sm text-gray-400">태그 정보가 없습니다.</p>
             <template v-else>
