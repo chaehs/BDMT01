@@ -15,8 +15,7 @@ export const useRacketStore = defineStore('racket', () => {
     
     isLoading.value = true;
     try {
-      // 태그 필터 비활성화: 기본 rackets 테이블만 조회
-      let query = supabase.from('rackets').select('*');
+      let query = supabase.from('rackets').select('*, tags(*)');
 
       if (filters.brand) query = query.ilike('brand', filters.brand);
       if (filters.weight) query = query.ilike('weight', filters.weight);

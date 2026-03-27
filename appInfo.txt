@@ -36,11 +36,11 @@
 ▢ 백엔드 : supabase
   ◯ Auth : 구글 로그인 구현 후 다른 방식 추후 구현
   ◯ 테이블별 컬럼
-    - rackets : brand[text], name[text], weight[text], balance[text], bal_point[text], flex[text], max_tension[int4], grip_size[text], colors[text[]], image_url[text]
-    - profiles : nickname[text], level[text], role[text], main_racket[text], pref_weight[text], pref_balance[text], pref_position[text], gender[text]
-    - tags : name[text]
-    - racket_tag_map : racket_id[text], tag_id[text]
-    - racket_reviews : racket_id[text], user_id[text], rating[int4]
+    - profiles : id[uuid], nickname[text], level[text], role[text], main_racket[text], pref_weight[text], pref_balance[text], pref_position[text], gender[text]
+    - rackets : id[uuid], brand[text], name[text], weight[text], balance[text], bal_point[text], flex[text], max_tension[int4], grip_size[text], colors[text[]], image_url[text]
+    - tags : id[uuid], name[text]
+    - racket_tag_map : racket_id[uuid], tag_id[uuid]
+    - racket_reviews : id[uuid], racket_id[text], user_id[text], rating[int4]
   ◯ Storage : racket_storage 폴더에 AI 라켓이미지 저장, 저장되는 파일명은 소문자+언더바
   ◯ 라우터 사용 : admin, user, login
 
@@ -64,3 +64,6 @@
 - supabase RLS 권한 정하기, 일단 설정은 완료, 추후 수정
 - 제품별 상세보기에서 건의하기 만들기
 - 태그 입력은 + 버튼 눌러서 입력
+
+
+태그를 못가져오는 상태

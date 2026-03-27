@@ -12,7 +12,13 @@
       <!-- Right: Specs -->
       <div class="w-2/3">
         <div class="bg-gray-800 text-white text-sm font-bold px-2.5 py-1 rounded-full inline-block mb-2">{{ uppercasedBrand }}</div>
-        <h3 class="font-bold text-gray-900 text-lg leading-tight truncate-2-lines">{{ racket.name }}</h3>
+        <div class="flex items-center justify-between">
+          <h3 class="font-bold text-gray-900 text-lg leading-tight truncate-2-lines flex-grow">{{ racket.name }}</h3>
+          <div class="flex-shrink-0 flex items-center gap-1 bg-gray-100 px-2.5 py-1 rounded-full ml-2">
+              <span class="text-yellow-400">★</span>
+              <span class="font-bold text-gray-800 text-sm">{{ racket.avg_rating || 0 }}</span>
+          </div>
+        </div>
         
         <div class="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-1 text-sm font-medium text-gray-700">
           <p><span class="font-semibold text-gray-500">무게:</span> {{ uppercasedWeight }}</p>
@@ -25,20 +31,19 @@
       </div>
     </div>
 
-    <!-- Bottom Section: Rating + Tags -->
+    <!-- Bottom Section: Tag Add Button + Tags -->
     <div class="mt-4 pt-4 border-t border-gray-100 flex items-center gap-3">
-        <div class="flex-shrink-0 flex items-center gap-1 bg-gray-100 px-2.5 py-1 rounded-full">
-            <span class="text-yellow-400">★</span>
-            <span class="font-bold text-gray-800 text-sm">{{ racket.avg_rating || 0 }}</span>
-        </div>
+        <button class="flex-shrink-0 flex items-center justify-center w-8 h-8 bg-green-100 text-green-600 rounded-full hover:bg-green-200 transition-colors">
+            <span class="font-bold text-xl">+</span>
+        </button>
         <div class="flex flex-wrap gap-1.5 flex-grow">
-            <p v-if="!racket.colors || (Array.isArray(racket.colors) && racket.colors.length === 0)" class="text-sm text-gray-400">색상 정보가 없습니다.</p>
+            <p v-if="!racket.tags || racket.tags.length === 0" class="text-sm text-gray-400">태그 정보가 없습니다.</p>
             <template v-else>
-                <span v-for="color in displayedColors" :key="color" class="bg-blue-100 text-blue-800 text-sm font-semibold px-2.5 py-1 rounded-full">
-                    #{{ color }}
+                <span v-for="tag in displayedTags" :key="tag.id" class="bg-blue-100 text-blue-800 text-sm font-semibold px-2.5 py-1 rounded-full">
+                    #{{ tag.name }}
                 </span>
-                <span v-if="remainingColorsCount > 0" class="bg-gray-200 text-gray-700 text-sm font-semibold px-2.5 py-1 rounded-full">
-                    +{{ remainingColorsCount }}
+                <span v-if="remainingTagsCount > 0" class="bg-gray-200 text-gray-700 text-sm font-semibold px-2.5 py-1 rounded-full">
+                    +{{ remainingTagsCount }}
                 </span>
             </template>
         </div>
@@ -92,17 +97,15 @@ const imageUrl = computed(() => {
   return data.publicUrl;
 });
 
-// --- Color Display Logic (Used as Tags) ---
-const displayedColors = computed(() => {
-    if (!props.racket.colors) return [];
-    const colorsArr = Array.isArray(props.racket.colors) ? props.racket.colors : [props.racket.colors];
-    return colorsArr.slice(0, 3); // Show 3 colors as tags
+// --- Tag Display Logic ---
+const displayedTags = computed(() => {
+    if (!props.racket.tags) return [];
+    return props.racket.tags.slice(0, 3); // Show 3 tags
 });
 
-const remainingColorsCount = computed(() => {
-    if (!props.racket.colors) return 0;
-    const colorsArr = Array.isArray(props.racket.colors) ? props.racket.colors : [props.racket.colors];
-    return colorsArr.length > 3 ? colorsArr.length - 3 : 0;
+const remainingTagsCount = computed(() => {
+    if (!props.racket.tags) return 0;
+    return props.racket.tags.length > 3 ? props.racket.tags.length - 3 : 0;
 });
 
 </script>

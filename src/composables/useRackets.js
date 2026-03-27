@@ -1,80 +1,29 @@
-import { ref } from 'vue'
-import { supabase } from '../supabase'
-
-const BUCKET_NAME = 'BDMT01';
-const IMAGE_FOLDER = 'racket_storage';
+import { ref } from 'vue';
+import { supabase } from '../supabase';
 
 export default function useRackets() {
-  const rackets = ref([])
-  const isLoading = ref(false)
+  const rackets = ref([]);
+  const loading = ref(false);
 
-  const fetchRackets = async (filters = {}) => {
-    isLoading.value = true;
+  const fetchRackets = async () => {
+    loading.value = true;
     try {
-      let query = supabase.from('rackets').select('*');
+      const { data, error } = await supabase
+        .from('rackets')
+        .select('*, tags:tags(name)');
 
-      // Use ILIKE for case-insensitive text filtering
-      if (filters.brand) query = query.ilike('brand', filters.brand);
-      if (filters.weight) query = query.ilike('weight', filters.weight);
-      if (filters.balance) query = query.ilike('balance', filters.balance);
-      if (filters.flex) query = query.ilike('flex', filters.flex);
-
-      // For name search, use wildcard match
-      if (filters.search && filters.search.trim()) query = query.ilike('name', `%${filters.search.trim()}%`);
+      if (error) {
+        console.error('Error fetching rackets (original error):', error);
+      }
       
-      // Removed 'tags' filter as the column does not exist in the database.
-      // If needed in the future, tags can be mapped to the 'colors' column or a new 'tags' column.
+      rackets.value = data || [];
 
-      const { data, error } = await query.order('name', { ascending: true }).limit(20);
-
-      if (error) throw error;
-      rackets.value = data;
     } catch (error) {
-      console.error('Error fetching rackets:', error.message);
-      rackets.value = [];
+      console.error('Catched error in fetchRackets:', error);
     } finally {
-      isLoading.value = false;
+      loading.value = false;
     }
   };
-  
-  const getRacketImage = (fileName) => {
-    if (!fileName) return 'https://placehold.co/40x50/F3F4F6/9CA3AF?text=N/A'
-    if (fileName.startsWith('http')) return fileName
 
-    // Normalize the file name to be lowercase and use underscores
-    const normalizedFileName = fileName.toLowerCase().replace(/\s+/g, '_');
-    
-    const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(`${IMAGE_FOLDER}/${normalizedFileName}`)
-    return data.publicUrl
-  }
-
-  const deleteRacket = async (racket) => {
-    // 1. Delete image from storage if it exists
-    if (racket.image_url && !racket.image_url.startsWith('http')) {
-      const filePath = `${IMAGE_FOLDER}/${racket.image_url.split('/').pop()}`
-      const { error: storageError } = await supabase.storage
-        .from(BUCKET_NAME)
-        .remove([filePath]);
-
-      if (storageError) {
-        // Log the error but don't block the process
-        console.warn(`Could not delete image: ${filePath}. Reason: ${storageError.message}`);
-      }
-    }
-
-    // 2. Delete the record from the database
-    const { error: dbError } = await supabase.from('rackets').delete().eq('id', racket.id);
-    if (dbError) throw dbError;
-    
-    // 3. Update local state immediately instead of re-fetching
-    rackets.value = rackets.value.filter(r => r.id !== racket.id);
-  }
-
-  return {
-    rackets,
-    isLoading,
-    fetchRackets,
-    getRacketImage,
-    deleteRacket
-  }
+  return { rackets, loading, fetchRackets };
 }
