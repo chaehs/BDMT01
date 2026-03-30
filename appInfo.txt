@@ -41,8 +41,14 @@
     - tags : id[uuid], name[text]
     - racket_tag_map : racket_id[uuid], tag_id[uuid]
     - racket_reviews : id[uuid], racket_id[text], user_id[text], rating[int4]
+    - ratings : id[uuid], racket_id[uuid], user_id[uuid], score[int4]
   ◯ Storage : racket_storage 폴더에 AI 라켓이미지 저장, 저장되는 파일명은 소문자+언더바
-  ◯ 라우터 사용 : admin, user, login
+
+  ◯ 별점 입력
+    - ratings 테이블 : id[uuid], racket_id[uuid], user_id[uuid], score[int4]
+    - 수파베이스 rpc : get_racket_stats(r_id uuid)
+
+  ◯ 라우터 사용 : admin, user, login, profile 등
 
 ▢ 스타일 : Tailwind CSS
   ◯ 빌드 후에 style이 적용이 잘 안되는 경우 tailwind 설치 관련 파일, style 관련 파일 재확인
@@ -54,15 +60,14 @@
 ▢ 빠른 기능구현으로 서비스 수요 파악 후 디테일 보완
   ◯ 최소기능 웹, 하이브리드앱 출시
 
+
+
 ▢ 추후 계획
-  ◯ 웹, 앱 빠른 앱 출시 후 앱 네이티브 전환
-  ◯ 최소 필수 기능만 구현하여 출시 후 보완
+  ◯ 웹, 앱 빠른 앱 출시 후 앱 네이티브 전환!!!
+  ◯ 최소 필수 기능만 구현하여 출시 후 보완!!!
   ◯ svg지도/가입자 기반 민턴 동호인 집계, 소모임 운영, 번개모임 기능 추가
 
 
-
-
 // 내가할일(md파일 반영 x)
-- supabase RLS 권한 정하기, 일단 설정은 완료, 추후 수정
 - 제품별 상세보기에서 건의하기 만들기
-- 태그 입력은 + 버튼 눌러서 입력
+- 별점입력 별점 누르면 팝업? 띄우고 1~5점 입력하는 방식으로

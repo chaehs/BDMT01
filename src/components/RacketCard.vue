@@ -1,5 +1,6 @@
 <template>
-  <div class="group block bg-white rounded-xl shadow-sm border border-gray-100 p-5 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+  <div class="group relative block bg-white rounded-xl shadow-sm border border-gray-100 p-5 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+    
     <!-- Top Section: Image + Specs -->
     <div class="flex gap-5">
       <!-- Left: Image -->
@@ -12,11 +13,14 @@
       <!-- Right: Specs -->
       <div class="w-2/3">
         <div class="bg-gray-800 text-white text-sm font-bold px-2.5 py-1 rounded-full inline-block mb-2">{{ uppercasedBrand }}</div>
-        <div class="flex items-center justify-between">
-          <h3 class="font-bold text-gray-900 text-lg leading-tight truncate-2-lines flex-grow">{{ racket.name }}</h3>
-          <div class="flex-shrink-0 flex items-center gap-1 bg-gray-100 px-2.5 py-1 rounded-full ml-2">
+        <div class="flex items-start justify-between">
+          <div class="flex-grow">
+            <h3 class="font-bold text-gray-900 text-lg leading-tight truncate-2-lines">{{ racket.name }}</h3>
+          </div>
+          <div @click="toggleRatingPopover" class="flex-shrink-0 flex items-center gap-1 bg-gray-100 px-2.5 py-1 rounded-full ml-2 cursor-pointer hover:bg-yellow-100 transition-colors">
               <span class="text-yellow-400">★</span>
-              <span class="font-bold text-gray-800 text-sm">{{ racket.avg_rating || 0 }}</span>
+              <span class="font-bold text-gray-800 text-sm">{{ ratingStats.avg.toFixed(1) }}</span>
+              <span class="text-sm text-gray-500">({{ ratingStats.count }})</span>
           </div>
         </div>
         
@@ -32,7 +36,7 @@
     </div>
 
     <!-- Bottom Section: Tags -->
-    <div class="mt-4 pt-4 border-t border-gray-100 flex items-center gap-3">
+    <div class="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between gap-3">
         <div class="flex flex-wrap gap-1.5 flex-grow">
             <p v-if="!racket.tags || racket.tags.length === 0" class="text-sm text-gray-400">태그 정보가 없습니다.</p>
             <template v-else>
@@ -45,64 +49,98 @@
             </template>
         </div>
     </div>
+
+    <!-- Rating Popover -->
+    <div v-if="showRatingPopover" class="absolute inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center rounded-xl p-4 z-10" @click.self="toggleRatingPopover">
+      <div class="bg-white p-6 rounded-xl shadow-2xl border border-gray-200 w-full max-w-xs">
+        <h4 class="font-bold text-gray-800 mb-3 text-center leading-tight">"{{ racket.name }}"<br>별점을 남겨주세요</h4>
+        <StarRating 
+          :initial-rating="userRating || 0"
+          @update:rating="handleRatingUpdate"
+          class="justify-center"
+        />
+        <p v-if="isLoading" class="text-center text-sm text-blue-500 mt-3">저장 중...</p>
+      </div>
+    </div>
+
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { supabase } from '../supabase'
+import { computed, ref, toRefs } from 'vue';
+import { supabase } from '../supabase';
+import useRatings from '../composables/useRatings';
+import StarRating from './StarRating.vue';
 
 const props = defineProps({
   racket: {
     type: Object,
     required: true
   }
-})
+});
+
+const { racket } = toRefs(props);
+
+// --- Ratings Logic ---
+const { ratingStats, userRating, submitRating, isLoading } = useRatings(racket.value.id);
+const showRatingPopover = ref(false);
+
+const toggleRatingPopover = () => {
+  if (!isLoading.value) { // Don't close while submitting
+    showRatingPopover.value = !showRatingPopover.value;
+  }
+};
+
+const handleRatingUpdate = async (newRating) => {
+  await submitRating(newRating);
+  setTimeout(() => {
+    showRatingPopover.value = false;
+  }, 500); // Show loading state briefly
+};
+
 
 // --- Computed Properties for Display ---
-
 const uppercasedBrand = computed(() => {
-  return props.racket.brand ? props.racket.brand.toUpperCase() : '';
+  return racket.value.brand ? racket.value.brand.toUpperCase() : '';
 });
 
 const uppercasedWeight = computed(() => {
-  if (!props.racket.weight) return '';
-  return String(props.racket.weight).toUpperCase();
+  if (!racket.value.weight) return '';
+  return String(racket.value.weight).toUpperCase();
 });
 
 const uppercasedFlex = computed(() => {
-  if (!props.racket.flex) return '';
-  return String(props.racket.flex).toUpperCase();
+  if (!racket.value.flex) return '';
+  return String(racket.value.flex).toUpperCase();
 });
 
 // --- Image URL Logic ---
-
 const BUCKET_NAME = 'BDMT01';
 const IMAGE_FOLDER = 'racket_storage';
 
 const imageUrl = computed(() => {
-  if (!props.racket.image_url) {
-    return `https://placehold.co/300x300/F3F4F6/9CA3AF?text=${props.racket.name}`
+  if (!racket.value.image_url) {
+    return `https://placehold.co/300x300/F3F4F6/9CA3AF?text=${racket.value.name}`;
   }
-  if (props.racket.image_url.startsWith('http')) {
-    return props.racket.image_url
+  if (racket.value.image_url.startsWith('http')) {
+    return racket.value.image_url;
   }
   const { data } = supabase.storage
     .from(BUCKET_NAME)
-    .getPublicUrl(`${IMAGE_FOLDER}/${props.racket.image_url}`);
+    .getPublicUrl(`${IMAGE_FOLDER}/${racket.value.image_url}`);
     
   return data.publicUrl;
 });
 
 // --- Tag Display Logic ---
 const displayedTags = computed(() => {
-    if (!props.racket.tags) return [];
-    return props.racket.tags.slice(0, 3); // Show 3 tags
+    if (!racket.value.tags) return [];
+    return racket.value.tags.slice(0, 3);
 });
 
 const remainingTagsCount = computed(() => {
-    if (!props.racket.tags) return 0;
-    return props.racket.tags.length > 3 ? props.racket.tags.length - 3 : 0;
+    if (!racket.value.tags || racket.value.tags.length <= 3) return 0;
+    return racket.value.tags.length - 3;
 });
 
 </script>
@@ -112,7 +150,7 @@ const remainingTagsCount = computed(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 2; /* number of lines to show */
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
 }
 </style>
