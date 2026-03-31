@@ -10,25 +10,14 @@ export const useRacketStore = defineStore('racket', () => {
   const rackets = ref([]);
   const isLoading = ref(false);
 
-  const fetchRackets = async (filters = {}) => {
+  const fetchRackets = async () => {
     if (isLoading.value) return;
     
     isLoading.value = true;
     try {
       let query = supabase.from('rackets').select('*, tags(*)');
 
-      if (filters.brand) query = query.ilike('brand', filters.brand);
-      if (filters.weight) query = query.ilike('weight', filters.weight);
-      if (filters.balance) query = query.ilike('balance', filters.balance);
-      if (filters.flex) query = query.ilike('flex', filters.flex);
-      
-      if (filters.search && filters.search.trim()) {
-        query = query.ilike('name', `%${filters.search.trim()}%`);
-      }
-      
-      // 태그 필터는 프론트엔드에서 처리하므로 여기서는 쿼리하지 않습니다.
-
-      const { data, error } = await query.order('name', { ascending: true }).limit(50); // 데이터 양을 늘려 더 많은 결과를 가져옵니다.
+      const { data, error } = await query.order('name', { ascending: true });
 
       if (error) throw error;
       rackets.value = data || [];

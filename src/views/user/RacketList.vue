@@ -43,7 +43,7 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import RacketCard from '../../components/RacketCard.vue'
 import RacketFilter from '../../components/RacketFilter.vue'
 import { useRacketStore } from '../../stores/racket'
@@ -59,19 +59,44 @@ const filters = ref({
   tags: []
 })
 
-// 모든 필터링을 통과한 라켓 목록을 계산합니다.
+onMounted(() => {
+  racketStore.fetchRackets();
+});
+
 const filteredRackets = computed(() => {
-  const selectedTags = filters.value.tags;
-  if (!selectedTags || selectedTags.length === 0) {
-    return racketStore.rackets;
-  }
-  
+  const { brand, weight, balance, flex, search, tags } = filters.value;
+  const searchTerm = (search || '').trim().toLowerCase();
+
   return racketStore.rackets.filter(racket => {
-    if (!racket.tags || racket.tags.length === 0) return false;
-    const racketTagNames = racket.tags.map(t => t.name);
-    return selectedTags.every(selectedTag => racketTagNames.includes(selectedTag));
+    // Dropdown Filters (case-insensitive and null-safe)
+    const brandMatch = !brand || (racket.brand || '').toUpperCase() === brand;
+    const weightMatch = !weight || (racket.weight || '').toUpperCase() === weight;
+    const balanceMatch = !balance || (racket.balance || '').toUpperCase() === balance;
+    const flexMatch = !flex || (racket.flex || '').toUpperCase() === flex;
+
+    // Tag Button Filter
+    const racketTagNames = racket.tags ? racket.tags.map(t => (t.name || '').toLowerCase()) : [];
+    const tagsMatch = tags.length === 0 || tags.every(tag => racketTagNames.includes((tag || '').toLowerCase()));
+    
+    // Search Input Filter
+    let searchMatch = true;
+    if (searchTerm) {
+      if (searchTerm.startsWith('#')) {
+        const tagSearch = searchTerm.substring(1);
+        searchMatch = tagSearch ? racketTagNames.some(tagName => tagName.includes(tagSearch)) : false;
+      } else {
+        const nameKoMatch = (racket.name_ko || '').toLowerCase().includes(searchTerm);
+        const nameEnMatch = (racket.name_en || '').toLowerCase().includes(searchTerm);
+        const tagNameMatch = racketTagNames.some(tagName => tagName.includes(searchTerm));
+        searchMatch = nameKoMatch || nameEnMatch || tagNameMatch;
+      }
+    }
+
+    // Return true only if all conditions are met
+    return brandMatch && weightMatch && balanceMatch && flexMatch && tagsMatch && searchMatch;
   });
 });
+
 
 const hasActiveFilters = computed(() => {
   return filters.value.brand || 
@@ -81,41 +106,6 @@ const hasActiveFilters = computed(() => {
          (filters.value.search && filters.value.search.trim()) ||
          (filters.value.tags && filters.value.tags.length > 0);
 })
-
-const debounce = (func, delay) => {
-    let timeoutId;
-    return (...args) => {
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => {
-            func.apply(this, args);
-        }, delay);
-    };
-};
-
-const debouncedFetch = debounce((newFilters) => {
-    racketStore.fetchRackets(newFilters);
-}, 300);
-
-watch(filters, (newFilters, oldFilters) => {
-    const nonTagFiltersChanged = (
-      newFilters.brand !== oldFilters.brand ||
-      newFilters.weight !== oldFilters.weight ||
-      newFilters.balance !== oldFilters.balance ||
-      newFilters.flex !== oldFilters.flex ||
-      newFilters.search !== oldFilters.search
-    );
-
-    if (hasActiveFilters.value) {
-      // 1. 태그 외 다른 필터가 변경되었거나
-      // 2. 현재 라켓 데이터가 없는 상태에서 필터가 활성화된 경우 (최초 태그 클릭 포함)
-      if (nonTagFiltersChanged || racketStore.rackets.length === 0) {
-        debouncedFetch(newFilters);
-      }
-    } else {
-      // 필터가 모두 비워지면 데이터도 비웁니다.
-      racketStore.rackets = [];
-    }
-}, { deep: true });
 
 const resetFilters = () => {
   filters.value = {
