@@ -85,10 +85,13 @@ const filteredRackets = computed(() => {
         const tagSearch = searchTerm.substring(1);
         searchMatch = tagSearch ? racketTagNames.some(tagName => tagName.includes(tagSearch)) : false;
       } else {
-        const nameKoMatch = (racket.name_ko || '').toLowerCase().includes(searchTerm);
-        const nameEnMatch = (racket.name_en || '').toLowerCase().includes(searchTerm);
-        const tagNameMatch = racketTagNames.some(tagName => tagName.includes(searchTerm));
-        searchMatch = nameKoMatch || nameEnMatch || tagNameMatch;
+        const cleanSearch = searchTerm.replace(/\s+/g, '');
+        const racketName = racket.name || racket.name_ko || racket.name_en || '';
+        
+        const nameMatch = racketName.toLowerCase().replace(/\s+/g, '').includes(cleanSearch);
+        const brandMatchSearch = (racket.brand || '').toLowerCase().replace(/\s+/g, '').includes(cleanSearch);
+        
+        searchMatch = nameMatch || brandMatchSearch;
       }
     }
 
