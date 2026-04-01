@@ -1,0 +1,23 @@
+# Supabase - Authentication - Policies
+  ◯ profiles
+    - Allow select for all authenticated users / SELECT / authenticated
+    - Users can insert their own profile / INSERT / authenticated
+    - Users can update their own profile / UPDATE / authenticated
+
+  ◯ racket_reviews
+
+  ◯ racket_tag_map
+    - Allow select maps for all / SELECT / public
+
+  ◯ rackets
+    - Allow select for all authenticated users / SELECT	/ authenticated
+
+  ◯ ratings
+    - 별점 수정 허용 / UPDATE / authenticated
+    - 별점 작성 허용 / INSERT / authenticated
+    - 별점 조회 허용 / SELECT / public
+
+  ◯ suggestions
+
+  ◯ tags
+    - Allow select tags for all / SELECT / public

@@ -1,0 +1,25 @@
+# Supabase - Database - Functions
+  ◯ get_racket_stats(r_id uuid)
+    BEGIN
+        RETURN QUERY
+        SELECT 
+            COALESCE(ROUND(AVG(score)::numeric, 1), 0.0) as avg_score,
+            COUNT(*)::bigint as total_count
+        FROM public.ratings
+        WHERE racket_id = r_id;
+    END;
+
+  ◯ handle_new_user
+    BEGIN
+        INSERT INTO public.profiles (id, role, email)
+        VALUES (new.id, 'associate', new.email);
+        RETURN new;
+    END;
+
+  ◯ is_admin
+    BEGIN
+        RETURN EXISTS (
+            SELECT 1 FROM public.profiles 
+            WHERE id = auth.uid() AND role = 'admin'
+        );
+    END;

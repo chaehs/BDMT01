@@ -1,0 +1,28 @@
+# Supabase - Table Editor
+  ◯ profiles
+    - id[uuid], nickname[text], level[text], role[text], main_racket[text],
+      pref_weight[text], pref_balance[text], pref_position[text], gender[text]
+
+    - 컬럼설명
+      • nickname(닉네임), level(급수), role(역할), main_racket(주력 라켓),
+        pref_weight(선호 무게), pref_balance(선호 밸런스), pref_position(선호 포지션), gender(성별)
+
+  ◯ rackets :
+    - id[uuid], brand[text], name[text], weight[text], balance[text], bal_point[text],
+      flex[text], max_tension[int4], grip_size[text], colors[text[]], image_url[text]
+
+    - 컬럼설명
+      • brand(브랜드), name(이름), weight(무게), balance(밸런스), bal_point(밸런스포인트),
+        flex(탄성), max_tension(스트링 최대장력), grip_size(그립두께), colors(대표색상)
+  
+  ◯ tags :
+    - id[uuid], name[text]
+
+  ◯ racket_tag_map
+    - racket_id[uuid], tag_id[uuid]
+
+  ◯ racket_reviews
+    - id[uuid], racket_id[text], user_id[text], rating[int4]
+
+  ◯ ratings
+    - id[uuid], racket_id[uuid], user_id[uuid], score[int4]
