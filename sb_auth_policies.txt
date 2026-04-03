@@ -10,7 +10,10 @@
     - Allow select maps for all / SELECT / public
 
   ◯ rackets
-    - Allow select for all authenticated users / SELECT	/ authenticated
+    - 누구나 라켓 정보 조회 가능 / SELECT /	public
+    - 매니저 이상 라켓 등록 가능 INSERT	authenticated
+    - 매니저 이상 라켓 수정 가능 UPDATE	authenticated
+    - 최고 관리자만 라켓 삭제 가능 DELETE	authenticated
 
   ◯ ratings
     - 별점 수정 허용 / UPDATE / authenticated
