@@ -28,9 +28,23 @@
           <p><span class="font-semibold text-gray-500">무게:</span> {{ uppercasedWeight }}</p>
           <p><span class="font-semibold text-gray-500">탄성:</span> {{ uppercasedFlex }}</p>
           <p><span class="font-semibold text-gray-500">최대장력:</span> {{ racket.max_tension || '' }}</p>
-          <p><span class="font-semibold text-gray-500">그립:</span> {{ racket.grip_size || '' }}</p>
-          <p><span class="font-semibold text-gray-500">밸런스:</span> {{ racket.balance || '' }}</p>
+          <p><span class="font-semibold text-gray-500">그립:</span> {{ uppercasedGripSize }}</p>
+          <p><span class="font-semibold text-gray-500">밸런스:</span> {{ uppercasedBalance }}</p>
           <p><span class="font-semibold text-gray-500">B.P:</span> {{ racket.bal_point ? racket.bal_point + 'mm' : '' }}</p>
+        </div>
+
+        <!-- 색상 표시 -->
+        <div v-if="racket.colors && racket.colors.length > 0" class="mt-3.5 flex items-center gap-2">
+          <span class="font-semibold text-sm text-gray-500">색상:</span>
+          <div class="flex gap-1.5 flex-wrap">
+            <div 
+              v-for="(color, idx) in parsedColors" 
+              :key="idx"
+              class="w-4 h-4 rounded-full border border-gray-300 shadow-sm cursor-pointer hover:scale-125 hover:shadow-md transition-all duration-200"
+              :style="{ backgroundColor: mapColorToCSS(color) }"
+              :title="color"
+            ></div>
+          </div>
         </div>
       </div>
     </div>
@@ -100,6 +114,21 @@ const handleRatingUpdate = async (newRating) => {
 
 
 // --- Computed Properties for Display ---
+const parsedColors = computed(() => {
+  const colors = racket.value.colors;
+  if (!colors) return [];
+  if (Array.isArray(colors)) return colors;
+  if (typeof colors === 'string') {
+    try {
+      const parsed = JSON.parse(colors);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch(e) {
+      return colors.replace(/[{}"[\]]/g, '').split(',').map(c => c.trim()).filter(Boolean);
+    }
+  }
+  return [];
+});
+
 const uppercasedBrand = computed(() => {
   return racket.value.brand ? racket.value.brand.toUpperCase() : '';
 });
@@ -113,6 +142,50 @@ const uppercasedFlex = computed(() => {
   if (!racket.value.flex) return '';
   return String(racket.value.flex).toUpperCase();
 });
+
+const uppercasedGripSize = computed(() => {
+  if (!racket.value.grip_size) return '';
+  return String(racket.value.grip_size).toUpperCase();
+});
+
+const uppercasedBalance = computed(() => {
+  if (!racket.value.balance) return '';
+  return String(racket.value.balance).toUpperCase();
+});
+
+const mapColorToCSS = (colorName) => {
+  if (!colorName) return 'transparent';
+  const c = colorName.trim().toLowerCase();
+  const colorMap = {
+    'red': '#ef4444',
+    'blue': '#3b82f6',
+    'black': '#1f2937',
+    'white': '#ffffff',
+    'navy': '#1e3a8a',
+    'yellow': '#eab308',
+    'green': '#22c55e',
+    'orange': '#f97316',
+    'purple': '#a855f7',
+    'pink': '#ec4899',
+    'silver': '#9ca3af',
+    'gold': '#fbbf24',
+    'grey': '#6b7280',
+    'gray': '#6b7280',
+    'cyan': '#06b6d4',
+    'turquoise': '#14b8a6',
+    'kurenai': '#c91f37',
+    'magenta': '#d946ef',
+    'lime': '#84cc16'
+  };
+  
+  if (colorMap[c]) return colorMap[c];
+  
+  for (const [key, val] of Object.entries(colorMap)) {
+    if (c.includes(key)) return val;
+  }
+  
+  return c;
+};
 
 // --- Image URL Logic ---
 const BUCKET_NAME = 'BDMT01';
