@@ -40,8 +40,27 @@ export const useRacketStore = defineStore('racket', () => {
   const deleteRacket = async (racket) => {
     try {
       if (racket.image_url && !racket.image_url.startsWith('http')) {
-        const filePath = `${IMAGE_FOLDER}/${racket.image_url}`;
-        await supabase.storage.from(BUCKET_NAME).remove([filePath]);
+        const extIdx = racket.image_url.lastIndexOf('.');
+        const basePart = extIdx !== -1 ? racket.image_url.substring(0, extIdx) : racket.image_url;
+
+        // 동일한 기준 이름(basePart)을 포함하는 모든 파일들을 검색하여 함께 삭제합니다 (색상 변형 이미지 포함)
+        const { data: files } = await supabase.storage.from(BUCKET_NAME).list(IMAGE_FOLDER, {
+          search: basePart
+        });
+
+        if (files && files.length > 0) {
+          const filesToRemove = files
+            .filter(f => f.name === racket.image_url || f.name.startsWith(`${basePart}_`))
+            .map(f => `${IMAGE_FOLDER}/${f.name}`);
+            
+          if (filesToRemove.length > 0) {
+            await supabase.storage.from(BUCKET_NAME).remove(filesToRemove);
+          }
+        } else {
+          // Fallback just in case list doesn't work
+          const filePath = `${IMAGE_FOLDER}/${racket.image_url}`;
+          await supabase.storage.from(BUCKET_NAME).remove([filePath]);
+        }
       }
       const { error } = await supabase.from('rackets').delete().eq('id', racket.id);
       if (error) throw error;

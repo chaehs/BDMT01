@@ -1,10 +1,10 @@
 <template>
   <div class="mb-12 max-w-4xl mx-auto space-y-6">
     <!-- Filter controls row -->
-    <div class="flex items-center gap-4">
+    <div class="flex flex-col md:flex-row items-stretch md:items-center gap-4 w-full">
       
       <!-- Group of Select Filters -->
-      <div class="flex flex-wrap gap-2">
+      <div class="flex flex-wrap justify-center md:justify-start gap-2 order-2 md:order-1 w-full md:w-auto">
         <!-- Brand Filter -->
         <select 
           :value="modelValue.brand" 
@@ -44,24 +44,37 @@
           <option value="">탄성</option>
           <option v-for="f in flexes" :key="f" :value="f">{{ f }}</option>
         </select>
+
+        <!-- Color Filter -->
+        <select 
+          :value="modelValue.color" 
+          @change="updateFilter('color', $event.target.value)"
+          class="px-4 py-2 bg-white border-2 border-gray-100 rounded-2xl shadow-sm focus:border-blue-500 outline-none transition-all text-sm font-bold text-gray-600"
+        >
+          <option value="">색상</option>
+          <option v-for="c in colors" :key="c" :value="c">{{ c }}</option>
+        </select>
       </div>
 
-      <!-- Search Input (takes up remaining space) -->
-      <div class="relative flex-1 min-w-[150px]">
-        <input 
-          :value="modelValue.search"
-          @input="updateFilter('search', $event.target.value)"
-          type="text" 
-          placeholder="라켓명 검색..." 
-          class="w-full pl-10 pr-4 py-2 bg-white border-2 border-gray-100 rounded-2xl shadow-sm focus:border-blue-500 outline-none transition-all text-sm font-medium"
-        />
-        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
-      </div>
+      <!-- Search & Reset Wrapper -->
+      <div class="flex items-center gap-2 flex-1 w-full order-1 md:order-2">
+        <!-- Search Input (takes up remaining space) -->
+        <div class="relative flex-1 min-w-[150px]">
+          <input 
+            :value="modelValue.search"
+            @input="updateFilter('search', $event.target.value)"
+            type="text" 
+            placeholder="라켓명 검색..." 
+            class="w-full pl-10 pr-4 py-2 bg-white border-2 border-gray-100 rounded-2xl shadow-sm focus:border-blue-500 outline-none transition-all text-sm font-medium"
+          />
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+        </div>
 
-      <!-- Reset Button -->
-      <button @click="$emit('reset')" class="flex-shrink-0 px-4 py-2 bg-gray-100 text-gray-500 rounded-2xl text-sm font-bold hover:bg-gray-200 transition-colors">
-        초기화
-      </button>
+        <!-- Reset Button -->
+        <button @click="$emit('reset')" class="flex-shrink-0 px-4 py-2 bg-gray-100 text-gray-500 rounded-2xl text-sm font-bold hover:bg-gray-200 transition-colors">
+          초기화
+        </button>
+      </div>
     </div>
     
     <!-- Popular Tags for Search -->
@@ -97,6 +110,7 @@ const brands = ['YONEX', 'VICTOR', 'LI-NING', 'MIZUNO']
 const weights = ['3U', '4U', '5U', 'F']
 const balances = ['HEAD LIGHT', 'EVEN BALANCE', 'HEAD HEAVY']
 const flexes = ['FLEXIBLE', 'MEDIUM', 'STIFF', 'EXTRA STIFF']
+const colors = ['RED', 'BLUE', 'BLACK', 'WHITE', 'YELLOW', 'GREEN', 'ORANGE', 'PINK', 'PURPLE', 'SILVER', 'GOLD', 'NAVY', 'GREY']
 const popularTags = ['초보자용', '소리좋음', '잘깨짐', '가성비', '공격형', '수비형']
 
 const updateFilter = (key, value) => {

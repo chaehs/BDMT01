@@ -28,24 +28,49 @@
         </div>
 
         <div class="space-y-2">
-          <label class="text-xs font-black text-gray-400 uppercase tracking-wider">라켓 이미지</label>
+          <label class="text-xs font-black text-gray-400 uppercase tracking-wider">대표 이미지 (리스트 기본 노출)</label>
           <div class="flex items-center gap-4">
             <img :src="imagePreviewUrl" alt="Racket image preview" class="w-32 h-32 object-cover rounded-xl bg-gray-100 border border-gray-200">
             <div class="flex-1">
-              <input 
-                type="file" 
-                @change="onFileChange" 
-                accept="image/*" 
-                class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-              >
-              <p class="mt-1 text-xs text-gray-500">PNG, JPG, GIF 등 이미지 파일을 선택하세요. 동일 모델이 있다면 자동 완성됩니다.</p>
+              <div class="flex items-center justify-between mb-2">
+                <input 
+                  type="file" 
+                  @change="onFileChange" 
+                  accept="image/*" 
+                  class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                >
+                <button v-if="isEdit && form.image_url" @click.prevent="deleteMainImage" class="whitespace-nowrap px-3 py-1.5 bg-red-50 text-red-500 hover:bg-red-100 rounded-lg text-xs font-bold transition-colors">
+                  대표이미지 삭제
+                </button>
+              </div>
+              <p class="text-xs text-gray-500">라켓 목록에서 기본으로 보여지는 메인 이미지입니다. (색상이 여러 개일 경우 가장 대표적인 색상 사진을 올려주세요)</p>
             </div>
           </div>
         </div>
 
         <div class="space-y-2">
           <label class="text-xs font-black text-gray-400 uppercase tracking-wider">대표 색상 (쉼표로 구분)</label>
-          <input v-model="form.colors" type="text" class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold" :placeholder="isEdit && originalColors ? `기존: ${originalColors}` : '예: Red, Blue, Black'">
+          <input v-model="form.colors" type="text" class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold uppercase" :placeholder="isEdit && originalColors ? `기존: ${originalColors}` : '예: Red, Blue, Black'">
+        </div>
+
+        <!-- Dynamic Color Image Upload Section -->
+        <div v-if="parsedColors.length > 0" class="space-y-3 pt-4 border-t border-gray-100">
+          <label class="text-xs font-black text-blue-500 uppercase tracking-wider">색상별 추가 라켓 이미지 (선택 영역)</label>
+          <p class="text-xs text-gray-400 mb-2">대표 이미지 외에 유저가 특정 색상을 눌렀을 때 이미지가 변하길 원한다면 해당하는 색상 파일만 추가해 주세요.</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div v-for="color in parsedColors" :key="color" class="flex flex-col gap-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-black text-gray-700 truncate" :title="color">{{ color }}</span>
+                <button v-if="isEdit" @click.prevent="deleteColorImage(color)" class="px-2 py-1 bg-red-50 text-red-500 hover:bg-red-100 rounded-lg text-[10px] font-bold transition-colors">스토리지 삭제</button>
+              </div>
+              <input 
+                type="file" 
+                @change="(e) => onColorFileChange(color, e)" 
+                accept="image/*" 
+                class="block w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-white file:text-blue-600 hover:file:bg-blue-50 cursor-pointer shadow-sm"
+              >
+            </div>
+          </div>
         </div>
       </section>
 
@@ -56,27 +81,27 @@
         <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
           <div class="space-y-2">
             <label class="text-xs font-black text-gray-400 uppercase tracking-wider">무게</label>
-            <input v-model="form.weight" type="text" class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold" :placeholder="isEdit && originalWeight ? `기존: ${originalWeight}` : '예: 4U'">
+            <input v-model="form.weight" type="text" class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold uppercase" :placeholder="isEdit && originalWeight ? `기존: ${originalWeight}` : '예: 4U'">
           </div>
           <div class="space-y-2">
             <label class="text-xs font-black text-gray-400 uppercase tracking-wider">밸런스</label>
-            <input v-model="form.balance" type="text" class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold" :placeholder="isEdit && originalBalance ? `기존: ${originalBalance}` : '예: HEAD HEAVY'">
+            <input v-model="form.balance" type="text" class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold uppercase" :placeholder="isEdit && originalBalance ? `기존: ${originalBalance}` : '예: HEAD HEAVY'">
           </div>
           <div class="space-y-2">
             <label class="text-xs font-black text-gray-400 uppercase tracking-wider">밸런스 포인트 (mm)</label>
-            <input v-model.number="form.bal_point" type="number" class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold" :placeholder="isEdit && originalBalPoint ? `기존: ${originalBalPoint}` : '예: 305'">
+            <input v-model.number="form.bal_point" type="number" class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold uppercase" :placeholder="isEdit && originalBalPoint ? `기존: ${originalBalPoint}` : '예: 305'">
           </div>
           <div class="space-y-2">
             <label class="text-xs font-black text-gray-400 uppercase tracking-wider">탄성</label>
-            <input v-model="form.flex" type="text" class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold" :placeholder="isEdit && originalFlex ? `기존: ${originalFlex}` : '예: STIFF'">
+            <input v-model="form.flex" type="text" class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold uppercase" :placeholder="isEdit && originalFlex ? `기존: ${originalFlex}` : '예: STIFF'">
           </div>
           <div class="space-y-2">
             <label class="text-xs font-black text-gray-400 uppercase tracking-wider">최대장력 (lbs)</label>
-            <input v-model="form.max_tension" type="text" class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold" :placeholder="isEdit && originalMaxTension ? `기존: ${originalMaxTension}` : '예: 28'">
+            <input v-model="form.max_tension" type="text" class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold uppercase" :placeholder="isEdit && originalMaxTension ? `기존: ${originalMaxTension}` : '예: 28'">
           </div>
           <div class="space-y-2">
             <label class="text-xs font-black text-gray-400 uppercase tracking-wider">그립 두께</label>
-            <input v-model="form.grip_size" type="text" class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold" :placeholder="isEdit && originalGripSize ? `기존: ${originalGripSize}` : '예: G5'">
+            <input v-model="form.grip_size" type="text" class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold uppercase" :placeholder="isEdit && originalGripSize ? `기존: ${originalGripSize}` : '예: G5'">
           </div>
         </div>
       </section>
@@ -165,6 +190,84 @@ const onFileChange = (e) => {
     imageFile.value = file
   }
 }
+
+const colorFiles = ref({});
+const parsedColors = computed(() => {
+  const c = form.colors;
+  if (!c || !String(c).trim()) return [];
+  return String(c).split(',').map(x => x.trim().toUpperCase()).filter(Boolean);
+});
+const onColorFileChange = (color, e) => {
+  const file = e.target.files[0];
+  if (file) {
+    colorFiles.value[color] = file;
+  } else {
+    delete colorFiles.value[color];
+  }
+};
+
+const deleteColorImage = async (color) => {
+  if (!isEdit.value || !form.image_url) {
+      alert('저장된 라켓 이미지 기준이 없거나 신규 등록 중입니다.');
+      return;
+  }
+  
+  if (confirm(`'${color}' 색상의 개별 이미지를 스토리지에서 즉시 영구 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) {
+      try {
+          const extIdx = form.image_url.lastIndexOf('.');
+          let basePart = form.image_url;
+          let ext = 'png';
+          if (extIdx !== -1) {
+            basePart = form.image_url.substring(0, extIdx);
+            ext = form.image_url.substring(extIdx + 1);
+          }
+          const colorSuffix = color.replace(/\s+/g, '').toLowerCase();
+          const targetFileName = `${basePart}_${colorSuffix}.${ext}`;
+          const targetFilePath = `${IMAGE_FOLDER}/${targetFileName}`;
+          
+          const { error } = await supabase.storage.from(BUCKET_NAME).remove([targetFilePath]);
+          if (error) throw error;
+          
+          alert(`${color} 색상 이미지가 성공적으로 삭제되었습니다! (주의: 변경 사항을 눈으로 확인하려면 강력 새로고침이 필요할 수 있습니다)`);
+          
+          if (colorFiles.value[color]) {
+            delete colorFiles.value[color];
+          }
+      } catch(e) {
+          console.error(e);
+          alert('삭제 실패: ' + e.message);
+      }
+  }
+};
+
+const deleteMainImage = async () => {
+  if (!isEdit.value || !form.image_url) {
+      alert('삭제할 대표 이미지가 없습니다.');
+      return;
+  }
+  
+  if (confirm('라켓의 메인 대표 이미지를 즉시 완전히 삭제하시겠습니까?\n\n이 작업은 스토리지에서 즉시 삭제되며 번복할 수 없습니다.\n주의: 대표 이미지가 지워지면 임시로 유저 화면에서 빈 사진으로 노출됩니다.')) {
+      try {
+          // 스토리지에서 삭제
+          const filePath = `${IMAGE_FOLDER}/${form.image_url}`;
+          const { error: storageError } = await supabase.storage.from(BUCKET_NAME).remove([filePath]);
+          if (storageError) throw storageError;
+          
+          // 곧바로 DB에서도 null 처리하여 끊어줌
+          const { error: dbError } = await supabase.from('rackets').update({ image_url: null }).eq('id', route.params.id);
+          if (dbError) throw dbError;
+          
+          // 화면 상태 초기화
+          form.image_url = '';
+          imageFile.value = null;
+          
+          alert('대표 이미지가 성공적으로 완전 삭제되었습니다.');
+      } catch(e) {
+          console.error(e);
+          alert('대표 이미지 삭제 실패: ' + e.message);
+      }
+  }
+};
 
 const populateFormData = (data) => {
   if (Array.isArray(data.colors)) {
@@ -327,12 +430,12 @@ const saveRacket = async () => {
       name: finalName,
       brand: form.brand?.toUpperCase(),
       image_url: imagePath, // This will be the new, found, or existing path
-      weight: form.weight?.toLowerCase() || null,
+      weight: form.weight?.toUpperCase() || null,
       balance: form.balance?.toUpperCase() || null,
       bal_point: form.bal_point ? parseInt(form.bal_point, 10) : null,
       flex: form.flex?.toUpperCase() || null,
       max_tension: form.max_tension?.toString() || null,
-      grip_size: form.grip_size?.toLowerCase() || null,
+      grip_size: form.grip_size?.toUpperCase() || null,
       colors: null,
     };
 
@@ -359,8 +462,29 @@ const saveRacket = async () => {
     if (!savedData || savedData.length === 0) {
        throw new Error(`권한 부족: DB 업데이트가 무시되었습니다.\nSupabase 대시보드에서 rackets 테이블의 UPDATE 정책(Policy)이 켜져 있는지 확인해주세요.`);
     }
+
+    // 4. Upload Color Variant Images (if any array items exist)
+    if (imagePath && Object.keys(colorFiles.value).length > 0) {
+      const extIdx = imagePath.lastIndexOf('.');
+      let basePart = imagePath;
+      if (extIdx !== -1) {
+        basePart = imagePath.substring(0, extIdx);
+      }
+
+      const uploadPromises = Object.entries(colorFiles.value).map(async ([color, file]) => {
+         // 프론트엔드가 메인 이미지의 확장자를 기준으로 파일을 찾으므로, 무조건 메인 이미지 확장자를 따르도록 통일합니다.
+         const mainExt = imagePath.includes('.') ? imagePath.split('.').pop() : 'png';
+         const colorSuffix = color.replace(/\s+/g, '').toLowerCase();
+         const colorFileName = `${basePart}_${colorSuffix}.${mainExt}`;
+         const colorFilePath = `${IMAGE_FOLDER}/${colorFileName}`;
+         
+         const { error } = await supabase.storage.from(BUCKET_NAME).upload(colorFilePath, file, { upsert: true, cacheControl: '0' });
+         if (error) console.error("Failed to upload color image:", colorFileName, error);
+      });
+      await Promise.all(uploadPromises);
+    }
     
-    // 4. Finalize
+    // 5. Finalize
     alert(isEdit.value ? '수정되었습니다.' : '등록되었습니다.');
     if (!isEdit.value) clearDraft();
     router.push('/admin/rackets');

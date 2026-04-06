@@ -6,7 +6,7 @@
       <!-- Left: Image -->
       <div class="w-1/3 flex-shrink-0">
         <div class="relative overflow-hidden rounded-lg pt-[100%]">
-          <img :src="imageUrl" :alt="racket.name" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
+          <img :src="imageUrl" @error="handleImageError" :alt="racket.name" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
         </div>
       </div>
 
@@ -40,7 +40,9 @@
             <div 
               v-for="(color, idx) in parsedColors" 
               :key="idx"
+              @click="selectedColorName = color"
               class="w-4 h-4 rounded-full border border-gray-300 shadow-sm cursor-pointer hover:scale-125 hover:shadow-md transition-all duration-200"
+              :class="{'ring-2 ring-blue-500 ring-offset-1 scale-125': selectedColorName === color}"
               :style="{ backgroundColor: mapColorToCSS(color) }"
               :title="color"
             ></div>
@@ -81,7 +83,7 @@
 </template>
 
 <script setup>
-import { computed, ref, toRefs } from 'vue';
+import { computed, ref, toRefs, watch } from 'vue';
 import { supabase } from '../supabase';
 import useRatings from '../composables/useRatings';
 import StarRating from './StarRating.vue';
@@ -191,6 +193,19 @@ const mapColorToCSS = (colorName) => {
 const BUCKET_NAME = 'BDMT01';
 const IMAGE_FOLDER = 'racket_storage';
 
+const selectedColorName = ref('');
+const imageLoadError = ref(false);
+
+watch(selectedColorName, () => {
+    imageLoadError.value = false;
+});
+
+const handleImageError = () => {
+  if (selectedColorName.value) {
+    imageLoadError.value = true;
+  }
+};
+
 const imageUrl = computed(() => {
   if (!racket.value.image_url) {
     return `https://placehold.co/300x300/F3F4F6/9CA3AF?text=${racket.value.name}`;
@@ -198,9 +213,23 @@ const imageUrl = computed(() => {
   if (racket.value.image_url.startsWith('http')) {
     return racket.value.image_url;
   }
+  
+  let fileName = racket.value.image_url;
+  
+  if (selectedColorName.value && !imageLoadError.value) {
+     const extIdx = fileName.lastIndexOf('.');
+     if (extIdx !== -1) {
+       const base = fileName.substring(0, extIdx);
+       const ext = fileName.substring(extIdx);
+       // 공백을 제거하고 전부 소문자로 (예: Red -> _red)
+       const colorSuffix = selectedColorName.value.replace(/\s+/g, '').toLowerCase();
+       fileName = `${base}_${colorSuffix}${ext}`;
+     }
+  }
+
   const { data } = supabase.storage
     .from(BUCKET_NAME)
-    .getPublicUrl(`${IMAGE_FOLDER}/${racket.value.image_url}`);
+    .getPublicUrl(`${IMAGE_FOLDER}/${fileName}`);
     
   return data.publicUrl;
 });

@@ -42,7 +42,7 @@
               </div>
             </td>
             <td class="p-5 font-bold text-gray-500 uppercase text-xs">{{ racket.brand }}</td>
-            <td class="p-5 font-bold text-gray-800 text-sm">
+            <td class="p-5 font-bold text-gray-800 text-sm uppercase">
               {{ racket.weight }} / {{ racket.balance }}
             </td>
             <td class="p-5">

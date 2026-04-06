@@ -55,6 +55,7 @@ const filters = ref({
   weight: '',
   balance: '',
   flex: '',
+  color: '',
   search: '',
   tags: []
 })
@@ -64,7 +65,7 @@ onMounted(() => {
 });
 
 const filteredRackets = computed(() => {
-  const { brand, weight, balance, flex, search, tags } = filters.value;
+  const { brand, weight, balance, flex, color, search, tags } = filters.value;
   const searchTerm = (search || '').trim().toLowerCase();
 
   return racketStore.rackets.filter(racket => {
@@ -73,6 +74,26 @@ const filteredRackets = computed(() => {
     const weightMatch = !weight || (racket.weight || '').toUpperCase() === weight;
     const balanceMatch = !balance || (racket.balance || '').toUpperCase() === balance;
     const flexMatch = !flex || (racket.flex || '').toUpperCase() === flex;
+
+    let colorMatch = true;
+    if (color) {
+      const colorsData = racket.colors;
+      let racketColors = [];
+      if (colorsData) {
+        if (Array.isArray(colorsData)) {
+          racketColors = colorsData;
+        } else if (typeof colorsData === 'string') {
+          try {
+            const parsed = JSON.parse(colorsData);
+            racketColors = Array.isArray(parsed) ? parsed : [];
+          } catch(e) {
+            racketColors = colorsData.replace(/[{}"[\]]/g, '').split(',').map(c => c.trim()).filter(Boolean);
+          }
+        }
+      }
+      racketColors = racketColors.map(c => String(c).toUpperCase());
+      colorMatch = racketColors.includes(color);
+    }
 
     // Tag Button Filter
     const racketTagNames = racket.tags ? racket.tags.map(t => (t.name || '').toLowerCase()) : [];
@@ -96,7 +117,7 @@ const filteredRackets = computed(() => {
     }
 
     // Return true only if all conditions are met
-    return brandMatch && weightMatch && balanceMatch && flexMatch && tagsMatch && searchMatch;
+    return brandMatch && weightMatch && balanceMatch && flexMatch && colorMatch && tagsMatch && searchMatch;
   });
 });
 
@@ -106,6 +127,7 @@ const hasActiveFilters = computed(() => {
          filters.value.weight || 
          filters.value.balance || 
          filters.value.flex || 
+         filters.value.color ||
          (filters.value.search && filters.value.search.trim()) ||
          (filters.value.tags && filters.value.tags.length > 0);
 })
@@ -116,6 +138,7 @@ const resetFilters = () => {
     weight: '',
     balance: '',
     flex: '',
+    color: '',
     search: '',
     tags: []
   }
