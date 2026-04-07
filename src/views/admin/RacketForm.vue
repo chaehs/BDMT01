@@ -53,6 +53,52 @@
           <input v-model="form.colors" type="text" class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold uppercase" :placeholder="isEdit && originalColors ? `기존: ${originalColors}` : '예: Red, Blue, Black'">
         </div>
 
+        <!-- 태그 입력 섹션 -->
+        <div class="space-y-3">
+          <label class="text-xs font-black text-gray-400 uppercase tracking-wider">태그 (엔터 혹은 자동완성 선택)</label>
+          <div class="relative">
+            <input 
+              v-model="tagInput" 
+              type="text" 
+              @keydown.enter.prevent="handleEnterKey"
+              @keydown.down.prevent="highlightNext"
+              @keydown.up.prevent="highlightPrev"
+              @input="highlightIndex = -1"
+              class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold" 
+              placeholder="예: 공격형, 초심자추천, 올라운드 등"
+            >
+            
+            <ul v-if="filteredTags.length > 0" class="absolute z-50 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-xl max-h-48 overflow-y-auto">
+              <li 
+                v-for="(tag, idx) in filteredTags" 
+                :key="tag.id"
+                @click="addTag(tag.name)"
+                :class="{'bg-blue-50 text-blue-600': idx === highlightIndex}"
+                class="px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm font-bold border-b border-gray-50 last:border-0"
+              >
+                {{ tag.name }}
+              </li>
+            </ul>
+          </div>
+
+          <div v-if="form.tags.length > 0" class="flex flex-wrap gap-2">
+            <span 
+              v-for="(tag, idx) in form.tags" 
+              :key="idx"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 text-xs font-black rounded-lg group"
+            >
+              #{{ tag }}
+              <button 
+                type="button" 
+                @click="removeTag(idx)"
+                class="hover:text-red-500 transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+            </span>
+          </div>
+        </div>
+
         <!-- Dynamic Color Image Upload Section -->
         <div v-if="parsedColors.length > 0" class="space-y-3 pt-4 border-t border-gray-100">
           <label class="text-xs font-black text-blue-500 uppercase tracking-wider">색상별 추가 라켓 이미지 (선택 영역)</label>
@@ -138,7 +184,6 @@
 import { ref, reactive, onMounted, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '../../supabase'
-import useRackets from '../../composables/useRackets'
 import { useRacketStore } from '../../stores/racket'
 
 const route = useRoute()
@@ -158,6 +203,18 @@ const originalFlex = ref('')
 const originalMaxTension = ref('')
 const originalGripSize = ref('')
 
+// 태그 관련 상태
+const allTags = ref([])
+const tagInput = ref('')
+const highlightIndex = ref(-1)
+const filteredTags = computed(() => {
+  if (!tagInput.value) return []
+  return allTags.value.filter(tag => 
+    tag.name.toLowerCase().includes(tagInput.value.toLowerCase()) && 
+    !form.tags.includes(tag.name)
+  )
+})
+
 const BUCKET_NAME = 'BDMT01';
 const IMAGE_FOLDER = 'racket_storage';
 
@@ -172,23 +229,18 @@ const form = reactive({
   max_tension: '',
   grip_size: '',
   colors: '',
+  tags: [],
 })
 
 const imagePreviewUrl = computed(() => {
-  if (imageFile.value) {
-    return URL.createObjectURL(imageFile.value)
-  }
-  if (form.image_url) {
-    return racketStore.getRacketImage(form.image_url)
-  }
+  if (imageFile.value) return URL.createObjectURL(imageFile.value)
+  if (form.image_url) return racketStore.getRacketImage(form.image_url)
   return 'https://placehold.co/300x300/F3F4F6/9CA3AF?text=NO+IMAGE'
 })
 
 const onFileChange = (e) => {
   const file = e.target.files[0]
-  if (file) {
-    imageFile.value = file
-  }
+  if (file) imageFile.value = file
 }
 
 const colorFiles = ref({});
@@ -197,92 +249,90 @@ const parsedColors = computed(() => {
   if (!c || !String(c).trim()) return [];
   return String(c).split(',').map(x => x.trim().toUpperCase()).filter(Boolean);
 });
+
 const onColorFileChange = (color, e) => {
   const file = e.target.files[0];
-  if (file) {
-    colorFiles.value[color] = file;
-  } else {
-    delete colorFiles.value[color];
+  if (file) colorFiles.value[color] = file;
+  else delete colorFiles.value[color];
+};
+
+// 태그 관련 함수
+const fetchAllTags = async () => {
+  const { data, error } = await supabase.from('tags').select('id, name');
+  if (error) console.error('Error fetching tags:', error);
+  else allTags.value = data;
+};
+
+const addTag = (tagName) => {
+  const trimmed = tagName.trim().toUpperCase();
+  if (trimmed && !form.tags.includes(trimmed)) {
+    form.tags.push(trimmed);
+  }
+  tagInput.value = '';
+  highlightIndex.value = -1;
+};
+
+const removeTag = (idx) => {
+  form.tags.splice(idx, 1);
+};
+
+const highlightNext = () => {
+  if (filteredTags.value.length === 0) return;
+  highlightIndex.value = (highlightIndex.value + 1) % filteredTags.value.length;
+};
+
+const highlightPrev = () => {
+  if (filteredTags.value.length === 0) return;
+  highlightIndex.value = (highlightIndex.value - 1 + filteredTags.value.length) % filteredTags.value.length;
+};
+
+const handleEnterKey = () => {
+  if (highlightIndex.value >= 0 && filteredTags.value[highlightIndex.value]) {
+    addTag(filteredTags.value[highlightIndex.value].name);
+  } else if (tagInput.value) {
+    addTag(tagInput.value);
   }
 };
 
 const deleteColorImage = async (color) => {
-  if (!isEdit.value || !form.image_url) {
-      alert('저장된 라켓 이미지 기준이 없거나 신규 등록 중입니다.');
-      return;
-  }
-  
-  if (confirm(`'${color}' 색상의 개별 이미지를 스토리지에서 즉시 영구 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) {
-      try {
-          const extIdx = form.image_url.lastIndexOf('.');
-          let basePart = form.image_url;
-          let ext = 'png';
-          if (extIdx !== -1) {
-            basePart = form.image_url.substring(0, extIdx);
-            ext = form.image_url.substring(extIdx + 1);
-          }
-          const colorSuffix = color.replace(/\s+/g, '').toLowerCase();
-          const targetFileName = `${basePart}_${colorSuffix}.${ext}`;
-          const targetFilePath = `${IMAGE_FOLDER}/${targetFileName}`;
-          
-          const { error } = await supabase.storage.from(BUCKET_NAME).remove([targetFilePath]);
-          if (error) throw error;
-          
-          alert(`${color} 색상 이미지가 성공적으로 삭제되었습니다! (주의: 변경 사항을 눈으로 확인하려면 강력 새로고침이 필요할 수 있습니다)`);
-          
-          if (colorFiles.value[color]) {
-            delete colorFiles.value[color];
-          }
-      } catch(e) {
-          console.error(e);
-          alert('삭제 실패: ' + e.message);
+  if (!isEdit.value || !form.image_url) return alert('이미지가 없습니다.');
+  if (confirm(`'${color}' 색상의 이미지를 영구 삭제하시겠습니까?`)) {
+    try {
+      const extIdx = form.image_url.lastIndexOf('.');
+      let basePart = form.image_url;
+      let ext = 'png';
+      if (extIdx !== -1) {
+        basePart = form.image_url.substring(0, extIdx);
+        ext = form.image_url.substring(extIdx + 1);
       }
+      const targetFileName = `${basePart}_${color.replace(/\s+/g, '').toLowerCase()}.${ext}`;
+      const { error } = await supabase.storage.from(BUCKET_NAME).remove([`${IMAGE_FOLDER}/${targetFileName}`]);
+      if (error) throw error;
+      alert('삭제되었습니다.');
+    } catch(e) {
+      alert('삭제 실패: ' + e.message);
+    }
   }
 };
 
 const deleteMainImage = async () => {
-  if (!isEdit.value || !form.image_url) {
-      alert('삭제할 대표 이미지가 없습니다.');
-      return;
-  }
-  
-  if (confirm('라켓의 메인 대표 이미지를 즉시 완전히 삭제하시겠습니까?\n\n이 작업은 스토리지에서 즉시 삭제되며 번복할 수 없습니다.\n주의: 대표 이미지가 지워지면 임시로 유저 화면에서 빈 사진으로 노출됩니다.')) {
-      try {
-          // 스토리지에서 삭제
-          const filePath = `${IMAGE_FOLDER}/${form.image_url}`;
-          const { error: storageError } = await supabase.storage.from(BUCKET_NAME).remove([filePath]);
-          if (storageError) throw storageError;
-          
-          // 곧바로 DB에서도 null 처리하여 끊어줌
-          const { error: dbError } = await supabase.from('rackets').update({ image_url: null }).eq('id', route.params.id);
-          if (dbError) throw dbError;
-          
-          // 화면 상태 초기화
-          form.image_url = '';
-          imageFile.value = null;
-          
-          alert('대표 이미지가 성공적으로 완전 삭제되었습니다.');
-      } catch(e) {
-          console.error(e);
-          alert('대표 이미지 삭제 실패: ' + e.message);
-      }
+  if (!isEdit.value || !form.image_url) return;
+  if (confirm('메인 이미지를삭제하시겠습니까?')) {
+    try {
+      await supabase.storage.from(BUCKET_NAME).remove([`${IMAGE_FOLDER}/${form.image_url}`]);
+      await supabase.from('rackets').update({ image_url: null }).eq('id', route.params.id);
+      form.image_url = '';
+      imageFile.value = null;
+      alert('삭제되었습니다.');
+    } catch(e) {
+      alert('삭제 실패: ' + e.message);
+    }
   }
 };
 
 const populateFormData = (data) => {
-  if (Array.isArray(data.colors)) {
-    data.colors = data.colors.join(', ');
-  } else if (typeof data.colors === 'string') {
-    try {
-      const parsed = JSON.parse(data.colors);
-      if (Array.isArray(parsed)) {
-        data.colors = parsed.join(', ');
-      } else {
-        data.colors = data.colors.replace(/[{}"[\]]/g, ''); 
-      }
-    } catch (e) {
-      data.colors = data.colors.replace(/[{}"[\]]/g, ''); 
-    }
+  if (typeof data.colors === 'string') {
+    data.colors = data.colors.replace(/[{}"[\]]/g, '').split(',').join(', ');
   }
   originalName.value = data.name || ''
   originalColors.value = data.colors || ''
@@ -294,7 +344,7 @@ const populateFormData = (data) => {
   originalGripSize.value = data.grip_size || ''
   
   form.name = data.name || ''
-  if (data.brand) form.brand = data.brand
+  form.brand = data.brand || 'YONEX'
   form.image_url = data.image_url || ''
   form.weight = data.weight || ''
   form.balance = data.balance || ''
@@ -303,60 +353,46 @@ const populateFormData = (data) => {
   form.max_tension = data.max_tension || ''
   form.grip_size = data.grip_size || ''
   form.colors = data.colors || ''
+  form.tags = data.tags ? data.tags.map(t => t.name) : []
 }
 
 const loadRacketData = async () => {
-  if (!isEdit.value) {
-    checkDraft()
-    return
-  }
-  
+  if (!isEdit.value) return checkDraft();
   try {
-    // 2. 스토어에 데이터가 없으면 DB에서 최신 데이터 불러오기
-    const { data: fetchedData, error } = await supabase
+    const { data, error } = await supabase
       .from('rackets')
-      .select('*')
+      .select('*, tags(name)')
       .eq('id', route.params.id)
       .single()
-    
     if (error) throw error
-    if (fetchedData) {
-      populateFormData(fetchedData)
-    }
+    if (data) populateFormData(data)
   } catch (err) {
     console.error('Error loading racket data:', err)
   }
 }
 
-// 1. 처음 컴포넌트 셋업 시 피니아 스토어에서 데이터가 있다면 즉시 로딩 (깜빡임과 렌더링 지연 해결)
 let loadedFromStore = false
-if (isEdit.value && racketStore.rackets && racketStore.rackets.length > 0) {
-  const foundItem = racketStore.rackets.find(r => String(r.id) === String(route.params.id));
-  if (foundItem) {
-    populateFormData(JSON.parse(JSON.stringify(foundItem)))
+if (isEdit.value && racketStore.rackets?.length > 0) {
+  const found = racketStore.rackets.find(r => String(r.id) === String(route.params.id));
+  if (found) {
+    populateFormData(JSON.parse(JSON.stringify(found)))
     loadedFromStore = true
   }
 }
 
 onMounted(() => {
-  if (!isEdit.value) {
-    checkDraft()
-  } else if (!loadedFromStore) {
-    // 피니아 스토어에서 데이터를 가져오지 못했을 때(새로고침 등) onMounted에서 안전하게 불러옴
-    loadRacketData()
-  }
+  fetchAllTags()
+  if (!isEdit.value) checkDraft()
+  else if (!loadedFromStore) loadRacketData()
 })
 
 const STORAGE_KEY = 'BDMT01_RACKET_FORM_DRAFT'
 watch(form, (newVal) => {
-  if (!isEdit.value) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newVal))
-  }
+  if (!isEdit.value) localStorage.setItem(STORAGE_KEY, JSON.stringify(newVal))
 }, { deep: true })
 
 const checkDraft = () => {
-  const draft = localStorage.getItem(STORAGE_KEY)
-  if (draft) hasDraft.value = true
+  if (localStorage.getItem(STORAGE_KEY)) hasDraft.value = true
 }
 
 const loadDraft = () => {
@@ -379,121 +415,71 @@ const saveRacket = async () => {
   try {
     let imagePath = form.image_url;
 
-    // 1. Handle Image: Use existing, find existing, or upload new
     if (imageFile.value) {
-      // 1a. New image is uploaded: upload it and get the path.
       const file = imageFile.value;
-      
-      // Sanitize and prepare parts for the filename
-      const finalNameForImage = form.name || originalName.value;
-      const baseName = finalNameForImage.toLowerCase().replace(/\s+/g, '_');
-      const weight = form.weight?.toLowerCase().replace(/\s+/g, '') || '';
-      const gripSize = form.grip_size?.toLowerCase().replace(/\s+/g, '') || '';
-      const fileExtension = file.name.split('.').pop();
-
-      // Build the final filename
-      const fileNameParts = [baseName];
-      if (weight) fileNameParts.push(weight);
-      if (gripSize) fileNameParts.push(gripSize);
-      
-      const fileName = `${fileNameParts.join('_')}.${fileExtension}`;
+      const baseName = (form.name || originalName.value).toLowerCase().replace(/\s+/g, '_');
+      const ext = file.name.split('.').pop();
+      const fileName = `${baseName}_${Date.now()}.${ext}`;
       const filePath = `${IMAGE_FOLDER}/${fileName}`;
       
-      const { error: uploadError } = await supabase.storage
-        .from(BUCKET_NAME)
-        .upload(filePath, file, { upsert: true }); // Use upsert to overwrite
-
-      if (uploadError) {
-        throw new Error(`[이미지 업로드 실패] ${uploadError.message}`);
-      }
-      imagePath = fileName; // DB stores only the file name
-    } else if (!isEdit.value && form.name) {
-      // 1b. No new image, creating new racket: Try to find an existing image from the same model.
-      const { data: existingRacket, error: findError } = await supabase
-        .from('rackets')
-        .select('image_url')
-        .ilike('name', form.name.trim())
-        .not('image_url', 'is', null)
-        .limit(1)
-        .single();
-
-      if (findError && findError.code !== 'PGRST116') { // Ignore 'single row not found' error
-        console.warn('Error while searching for existing racket image:', findError.message);
-      } else if (existingRacket?.image_url) {
-        imagePath = existingRacket.image_url;
-      }
+      const { error } = await supabase.storage.from(BUCKET_NAME).upload(filePath, file, { upsert: true });
+      if (error) throw error;
+      imagePath = fileName;
     }
 
-    // 2. Prepare Racket Data
-    const finalName = form.name ? form.name.trim().toUpperCase() : originalName.value;
     const racketData = {
-      name: finalName,
+      name: (form.name || originalName.value).trim().toUpperCase(),
       brand: form.brand?.toUpperCase(),
-      image_url: imagePath, // This will be the new, found, or existing path
+      image_url: imagePath,
       weight: form.weight?.toUpperCase() || null,
       balance: form.balance?.toUpperCase() || null,
-      bal_point: form.bal_point ? parseInt(form.bal_point, 10) : null,
+      bal_point: form.bal_point || null,
       flex: form.flex?.toUpperCase() || null,
       max_tension: form.max_tension?.toString() || null,
       grip_size: form.grip_size?.toUpperCase() || null,
-      colors: null,
     };
 
-    const finalColorsToSave = form.colors ? form.colors : (isEdit.value ? originalColors.value : '');
-    if (finalColorsToSave && String(finalColorsToSave).trim()) {
-      const colorsStr = Array.isArray(finalColorsToSave) ? finalColorsToSave.join(',') : String(finalColorsToSave);
-      const parsedArray = colorsStr.split(',').map(c => c.trim().toUpperCase()).filter(Boolean);
-      
-      // DB 컬럼이 text[] 타입일 경우 JS Array가 무시되거나 에러가 날 수 있으므로
-      // PostgreSQL의 순수 문자열 배열 형태인 '{"RED", "BLUE"}' 형식으로 만들어 전달합니다.
-      racketData.colors = `{${parsedArray.map(c => `"${c}"`).join(',')}}`;
+    if (form.colors || originalColors.value) {
+      const c = form.colors || originalColors.value;
+      const arr = String(c).split(',').map(x => x.trim().toUpperCase()).filter(Boolean);
+      racketData.colors = `{${arr.map(x => `"${x}"`).join(',')}}`;
     }
 
-    // 3. Insert or Update Database
-    const { data: savedData, error } = isEdit.value
+    const { data, error } = isEdit.value
       ? await supabase.from('rackets').update(racketData).eq('id', route.params.id).select()
       : await supabase.from('rackets').insert([racketData]).select();
 
-    if (error) {
-       console.error('Full Error Object:', error);
-       throw new Error(`[DB 저장 실패] ${error.message} (${error.code})`);
-    }
-    
-    if (!savedData || savedData.length === 0) {
-       throw new Error(`권한 부족: DB 업데이트가 무시되었습니다.\nSupabase 대시보드에서 rackets 테이블의 UPDATE 정책(Policy)이 켜져 있는지 확인해주세요.`);
+    if (error) throw error;
+    if (!data?.[0]) throw new Error('저장 실패');
+
+    const racketId = data[0].id;
+
+    // 태그 저장
+    const tagIds = await Promise.all(form.tags.map(async (name) => {
+      let t = allTags.value.find(x => x.name.toUpperCase() === name.toUpperCase());
+      if (t) return t.id;
+      const { data: nt, error: ne } = await supabase.from('tags').insert({ name: name.toUpperCase() }).select().single();
+      if (ne) throw ne;
+      return nt.id;
+    }));
+
+    await supabase.from('racket_tag_map').delete().eq('racket_id', racketId);
+    if (tagIds.length > 0) {
+      await supabase.from('racket_tag_map').insert(tagIds.map(tid => ({ racket_id: racketId, tag_id: tid })));
     }
 
-    // 4. Upload Color Variant Images (if any array items exist)
-    if (imagePath && Object.keys(colorFiles.value).length > 0) {
-      const extIdx = imagePath.lastIndexOf('.');
-      let basePart = imagePath;
-      if (extIdx !== -1) {
-        basePart = imagePath.substring(0, extIdx);
-      }
-
-      const uploadPromises = Object.entries(colorFiles.value).map(async ([color, file]) => {
-         // 프론트엔드가 메인 이미지의 확장자를 기준으로 파일을 찾으므로, 무조건 메인 이미지 확장자를 따르도록 통일합니다.
-         const mainExt = imagePath.includes('.') ? imagePath.split('.').pop() : 'png';
-         const colorSuffix = color.replace(/\s+/g, '').toLowerCase();
-         const colorFileName = `${basePart}_${colorSuffix}.${mainExt}`;
-         const colorFilePath = `${IMAGE_FOLDER}/${colorFileName}`;
-         
-         const { error } = await supabase.storage.from(BUCKET_NAME).upload(colorFilePath, file, { upsert: true, cacheControl: '0' });
-         if (error) console.error("Failed to upload color image:", colorFileName, error);
-      });
-      await Promise.all(uploadPromises);
-    }
-    
-    // 5. Finalize
     alert(isEdit.value ? '수정되었습니다.' : '등록되었습니다.');
     if (!isEdit.value) clearDraft();
     router.push('/admin/rackets');
-
   } catch (err) {
-    console.error('Final Save Error:', err);
-    alert(`오류 발생\n\n${err.message}`);
+    console.error(err);
+    alert('저장 실패: ' + err.message);
   } finally {
     isSaving.value = false;
   }
 }
 </script>
+
+<style scoped>
+/* 필요한 스타일이 있다면 추가 */
+</style>

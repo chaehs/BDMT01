@@ -38,9 +38,9 @@ export default function useRatings(racketId) {
       .select('score')
       .eq('racket_id', racketId)
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
-    if (error && error.code !== 'PGRST116') {
+    if (error) {
       console.error('Error fetching user rating:', error);
     }
     userRating.value = data ? data.score : null;
