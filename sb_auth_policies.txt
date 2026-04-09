@@ -1,8 +1,10 @@
 # Supabase - Authentication - Policies
+
   ◯ profiles
-    - Allow select for all authenticated users / SELECT / authenticated
-    - Users can insert their own profile / INSERT / authenticated
-    - Users can update their own profile / UPDATE / authenticated
+    - 사용자는 본인의 프로필을 삭제할 수 있음 / DELETE / authenticated
+    - 인증된 모든 사용자의 프로필 조회 허용 / SELECT / authenticated
+    - 사용자 본인의 프로필 생성 허용 / INSERT / authenticated
+    - 사용자 본인의 프로필 수정 허용 / UPDATE / authenticated
 
   ◯ racket_reviews
 

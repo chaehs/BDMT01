@@ -115,6 +115,23 @@
           {{ isSaving ? '저장 중...' : '프로필 정보 저장' }}
         </button>
       </div>
+
+      <!-- 위험 구역 (회원 탈퇴) -->
+      <div class="mt-20 pt-10 border-t border-gray-100">
+        <div class="bg-red-50 p-8 rounded-3xl border border-red-100 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <h4 class="text-red-600 font-black text-lg">계정 삭제 및 회원 탈퇴</h4>
+            <p class="text-red-400 text-sm mt-1 font-medium">탈퇴 시 모든 정보와 활동 내역(리뷰, 평점 등)이 영구 삭제되며 복구할 수 없습니다.</p>
+          </div>
+          <button 
+            type="button"
+            @click="confirmWithdraw"
+            class="px-8 py-4 bg-white text-red-600 border-2 border-red-100 rounded-2xl font-black hover:bg-red-600 hover:text-white hover:border-red-600 transition-all whitespace-nowrap"
+          >
+            회원 탈퇴하기
+          </button>
+        </div>
+      </div>
     </form>
   </div>
 </template>
@@ -186,6 +203,21 @@ const updateProfile = async () => {
     alert(`프로필 저장 실패: ${err.message}`);
   } finally {
     isSaving.value = false;
+  }
+};
+
+const confirmWithdraw = async () => {
+  const confirmed = window.confirm('정말로 탈퇴하시겠습니까?\n모든 데이터가 삭제되며 이 작업은 되돌릴 수 없습니다.');
+  
+  if (confirmed) {
+    try {
+      await authStore.withdraw();
+      alert('회원 탈퇴가 완료되었습니다. 그동안 이용해 주셔서 감사합니다.');
+      router.push('/');
+    } catch (err) {
+      console.error('Withdrawal failed:', err);
+      alert(`탈퇴 처리 중 오류가 발생했습니다: ${err.message}`);
+    }
   }
 };
 </script>

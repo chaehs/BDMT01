@@ -37,5 +37,28 @@ export const useAuthStore = defineStore('auth', () => {
     });
   };
 
-  return { user, isAdmin, isInitialized, init };
+  const withdraw = async () => {
+    if (!user.value) return;
+    
+    try {
+      // 1. 프로필 삭제 (DB에서 관련 데이터 익명화 처리가 완료됨을 전제로 함)
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', user.value.id);
+      
+      if (error) throw error;
+
+      // 3. 로그아웃 처리
+      await supabase.auth.signOut();
+      user.value = null;
+      isAdmin.value = false;
+      
+    } catch (error) {
+      console.error('Withdrawal error:', error);
+      throw error;
+    }
+  };
+
+  return { user, isAdmin, isInitialized, init, withdraw };
 });
