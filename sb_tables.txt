@@ -8,7 +8,7 @@
         pref_weight(선호 무게), pref_balance(선호 밸런스), pref_position(선호 포지션), gender(성별)
 
   ◯ rackets :
-    - id[uuid], brand[text], name[text], weight[text], balance[text], bal_point[text],
+    - id[uuid], brand[text], name[text], weight[text], balance[text], bal_point[text], length[text],
       flex[text], max_tension[int4], grip_size[text], colors[text[]], image_url[text]
 
     - 컬럼설명

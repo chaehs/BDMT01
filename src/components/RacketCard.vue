@@ -31,6 +31,7 @@
           <p><span class="font-semibold text-gray-500">그립:</span> {{ uppercasedGripSize }}</p>
           <p><span class="font-semibold text-gray-500">밸런스:</span> {{ uppercasedBalance }}</p>
           <p><span class="font-semibold text-gray-500">B.P:</span> {{ racket.bal_point ? racket.bal_point + 'mm' : '' }}</p>
+          <p v-if="racket.length"><span class="font-semibold text-gray-500">길이:</span> {{ racket.length }}mm</p>
         </div>
 
         <!-- 색상 표시 -->

@@ -187,6 +187,7 @@ const specs = computed(() => [
   { label: 'Balance', value: racket.value?.balance || '-' },
   { label: 'Flex', value: racket.value?.flex || '-' },
   { label: 'Max Tension', value: racket.value?.max_tension || '-' },
-  { label: 'Grip Size', value: racket.value?.grip_size || '-' }
+  { label: 'Grip Size', value: racket.value?.grip_size || '-' },
+  { label: 'Length', value: racket.value?.length || '-' }
 ])
 </script>

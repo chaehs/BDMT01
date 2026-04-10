@@ -131,7 +131,12 @@
           </div>
           <div class="space-y-2">
             <label class="text-xs font-black text-gray-400 uppercase tracking-wider">밸런스</label>
-            <input v-model="form.balance" type="text" class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold uppercase" :placeholder="isEdit && originalBalance ? `기존: ${originalBalance}` : '예: HEAD HEAVY'">
+            <select v-model="form.balance" class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold">
+              <option value="">선택하세요</option>
+              <option value="HEAD HEAVY">HEAD HEAVY (공격형)</option>
+              <option value="EVEN BALANCE">EVEN BALANCE (올라운드)</option>
+              <option value="HEAD LIGHT">HEAD LIGHT (수비형)</option>
+            </select>
           </div>
           <div class="space-y-2">
             <label class="text-xs font-black text-gray-400 uppercase tracking-wider">밸런스 포인트 (mm)</label>
@@ -139,7 +144,12 @@
           </div>
           <div class="space-y-2">
             <label class="text-xs font-black text-gray-400 uppercase tracking-wider">탄성</label>
-            <input v-model="form.flex" type="text" class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold uppercase" :placeholder="isEdit && originalFlex ? `기존: ${originalFlex}` : '예: STIFF'">
+            <select v-model="form.flex" class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold">
+              <option value="">선택하세요</option>
+              <option value="STIFF">STIFF (딱딱함)</option>
+              <option value="MEDIUM">MEDIUM (중간)</option>
+              <option value="FLEXIBLE">FLEXIBLE (부드러움)</option>
+            </select>
           </div>
           <div class="space-y-2">
             <label class="text-xs font-black text-gray-400 uppercase tracking-wider">최대장력 (lbs)</label>
@@ -148,6 +158,10 @@
           <div class="space-y-2">
             <label class="text-xs font-black text-gray-400 uppercase tracking-wider">그립 두께</label>
             <input v-model="form.grip_size" type="text" class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold uppercase" :placeholder="isEdit && originalGripSize ? `기존: ${originalGripSize}` : '예: G5'">
+          </div>
+          <div class="space-y-2">
+            <label class="text-xs font-black text-gray-400 uppercase tracking-wider">라켓 길이 (mm)</label>
+            <input v-model="form.length" type="text" class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold uppercase" :placeholder="isEdit && originalLength ? `기존: ${originalLength}` : '예: 675'">
           </div>
         </div>
       </section>
@@ -202,6 +216,7 @@ const originalBalPoint = ref('')
 const originalFlex = ref('')
 const originalMaxTension = ref('')
 const originalGripSize = ref('')
+const originalLength = ref('')
 
 // 태그 관련 상태
 const allTags = ref([])
@@ -228,6 +243,7 @@ const form = reactive({
   flex: '',
   max_tension: '',
   grip_size: '',
+  length: '',
   colors: '',
   tags: [],
 })
@@ -342,6 +358,7 @@ const populateFormData = (data) => {
   originalFlex.value = data.flex || ''
   originalMaxTension.value = data.max_tension || ''
   originalGripSize.value = data.grip_size || ''
+  originalLength.value = data.length || ''
   
   form.name = data.name || ''
   form.brand = data.brand || 'YONEX'
@@ -352,6 +369,7 @@ const populateFormData = (data) => {
   form.flex = data.flex || ''
   form.max_tension = data.max_tension || ''
   form.grip_size = data.grip_size || ''
+  form.length = data.length || ''
   form.colors = data.colors || ''
   form.tags = data.tags ? data.tags.map(t => t.name) : []
 }
@@ -437,6 +455,7 @@ const saveRacket = async () => {
       flex: form.flex?.toUpperCase() || null,
       max_tension: form.max_tension?.toString() || null,
       grip_size: form.grip_size?.toUpperCase() || null,
+      length: form.length?.toUpperCase() || null,
     };
 
     if (form.colors || originalColors.value) {
