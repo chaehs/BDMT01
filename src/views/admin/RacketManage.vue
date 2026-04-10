@@ -21,16 +21,15 @@
             <th class="p-5 text-xs font-black text-gray-400 uppercase tracking-wider">라켓</th>
             <th class="p-5 text-xs font-black text-gray-400 uppercase tracking-wider">브랜드</th>
             <th class="p-5 text-xs font-black text-gray-400 uppercase tracking-wider">스펙 (무게/밸런스)</th>
-            <th class="p-5 text-xs font-black text-gray-400 uppercase tracking-wider">리뷰</th>
             <th class="p-5 text-xs font-black text-gray-400 uppercase tracking-wider text-right">관리</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-50">
           <tr v-if="racketStore.isLoading" class="text-center py-20">
-            <td colspan="5" class="p-10 text-gray-400 font-bold">데이터를 불러오는 중...</td>
+            <td colspan="4" class="p-10 text-gray-400 font-bold">데이터를 불러오는 중...</td>
           </tr>
           <tr v-else-if="racketStore.rackets.length === 0" class="text-center py-20">
-            <td colspan="5" class="p-10 text-gray-400 font-bold">등록된 라켓이 없습니다.</td>
+            <td colspan="4" class="p-10 text-gray-400 font-bold">등록된 라켓이 없습니다.</td>
           </tr>
           <tr v-for="racket in racketStore.rackets" :key="racket.id" class="hover:bg-blue-50/30 transition-colors">
             <td class="p-5">
@@ -44,13 +43,6 @@
             <td class="p-5 font-bold text-gray-500 uppercase text-xs">{{ racket.brand }}</td>
             <td class="p-5 font-bold text-gray-800 text-sm uppercase">
               {{ racket.weight }} / {{ racket.balance }}
-            </td>
-            <td class="p-5">
-              <div class="flex items-center gap-1">
-                <span class="text-yellow-400">★</span>
-                <span class="font-bold text-gray-800">{{ racket.avg_rating || 0 }}</span>
-                <span class="text-gray-400 text-xs">({{ racket.review_count || 0 }})</span>
-              </div>
             </td>
             <td class="p-5 text-right space-x-2">
               <button @click="editRacket(racket.id)" class="text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded-xl font-bold transition-all text-xs">수정</button>

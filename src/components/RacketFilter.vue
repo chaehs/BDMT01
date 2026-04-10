@@ -1,79 +1,44 @@
 <template>
   <div class="mb-12 max-w-4xl mx-auto space-y-6">
     <!-- Filter controls row -->
-    <div class="flex flex-col md:flex-row items-stretch md:items-center gap-4 w-full">
+    <!-- Layout restructuring: Search top, Filters bottom -->
+    <div class="flex flex-col gap-5 w-full">
       
-      <!-- Group of Select Filters -->
-      <div class="flex flex-wrap justify-center md:justify-start gap-2 order-2 md:order-1 w-full md:w-auto">
-        <!-- Brand Filter -->
-        <select 
-          :value="modelValue.brand" 
-          @change="updateFilter('brand', $event.target.value)"
-          class="px-4 py-2 bg-white border-2 border-gray-100 rounded-2xl shadow-sm focus:border-blue-500 outline-none transition-all text-sm font-bold text-gray-600"
-        >
-          <option value="">브랜드</option>
-          <option v-for="brand in brands" :key="brand" :value="brand">{{ brand }}</option>
-        </select>
-
-        <!-- Weight Filter -->
-        <select 
-          :value="modelValue.weight" 
-          @change="updateFilter('weight', $event.target.value)"
-          class="px-4 py-2 bg-white border-2 border-gray-100 rounded-2xl shadow-sm focus:border-blue-500 outline-none transition-all text-sm font-bold text-gray-600"
-        >
-          <option value="">무게</option>
-          <option v-for="w in weights" :key="w" :value="w">{{ w }}</option>
-        </select>
-
-        <!-- Balance Filter -->
-        <select 
-          :value="modelValue.balance" 
-          @change="updateFilter('balance', $event.target.value)"
-          class="px-4 py-2 bg-white border-2 border-gray-100 rounded-2xl shadow-sm focus:border-blue-500 outline-none transition-all text-sm font-bold text-gray-600"
-        >
-          <option value="">밸런스</option>
-          <option v-for="b in balances" :key="b" :value="b">{{ b }}</option>
-        </select>
-
-        <!-- Flex Filter -->
-        <select 
-          :value="modelValue.flex" 
-          @change="updateFilter('flex', $event.target.value)"
-          class="px-4 py-2 bg-white border-2 border-gray-100 rounded-2xl shadow-sm focus:border-blue-500 outline-none transition-all text-sm font-bold text-gray-600"
-        >
-          <option value="">탄성</option>
-          <option v-for="f in flexes" :key="f" :value="f">{{ f }}</option>
-        </select>
-
-        <!-- Color Filter -->
-        <select 
-          :value="modelValue.color" 
-          @change="updateFilter('color', $event.target.value)"
-          class="px-4 py-2 bg-white border-2 border-gray-100 rounded-2xl shadow-sm focus:border-blue-500 outline-none transition-all text-sm font-bold text-gray-600"
-        >
-          <option value="">색상</option>
-          <option v-for="c in colors" :key="c" :value="c">{{ c }}</option>
-        </select>
-      </div>
-
-      <!-- Search & Reset Wrapper -->
-      <div class="flex items-center gap-2 flex-1 w-full order-1 md:order-2">
-        <!-- Search Input (takes up remaining space) -->
-        <div class="relative flex-1 min-w-[150px]">
+      <!-- Top Row: Search & Reset -->
+      <div class="flex items-center gap-3 w-full">
+        <div class="relative flex-1">
           <input 
             :value="modelValue.search"
             @input="updateFilter('search', $event.target.value)"
             type="text" 
-            placeholder="라켓명 검색..." 
-            class="w-full pl-10 pr-4 py-2 bg-white border-2 border-gray-100 rounded-2xl shadow-sm focus:border-blue-500 outline-none transition-all text-sm font-medium"
+            placeholder="라켓명, #태그 검색 (브랜드, 모델명 등)..." 
+            class="w-full pl-11 pr-4 py-3 bg-white border-2 border-gray-100 rounded-2xl shadow-sm focus:border-blue-500 outline-none transition-all text-sm font-medium"
           />
-          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">🔍</span>
         </div>
-
-        <!-- Reset Button -->
-        <button @click="$emit('reset')" class="flex-shrink-0 px-4 py-2 bg-gray-100 text-gray-500 rounded-2xl text-sm font-bold hover:bg-gray-200 transition-colors">
+        <button @click="$emit('reset')" class="flex-shrink-0 px-6 py-3 bg-gray-100 text-gray-500 rounded-2xl text-sm font-bold hover:bg-gray-200 transition-colors">
           초기화
         </button>
+      </div>
+
+      <!-- Bottom Row: Select Filters -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:flex md:flex-wrap justify-center md:justify-center gap-2 w-full">
+        <select 
+          v-for="filter in [
+            { key: 'brand', label: '브랜드', options: brands },
+            { key: 'weight', label: '무게', options: weights },
+            { key: 'balance', label: '밸런스', options: balances },
+            { key: 'flex', label: '탄성', options: flexes },
+            { key: 'color', label: '색상', options: colors }
+          ]"
+          :key="filter.key"
+          :value="modelValue[filter.key]" 
+          @change="updateFilter(filter.key, $event.target.value)"
+          class="w-full md:w-[125px] px-4 py-2 bg-white border-2 border-gray-100 rounded-2xl shadow-sm focus:border-blue-500 outline-none transition-all text-sm font-bold text-gray-600 cursor-pointer hover:border-gray-200"
+        >
+          <option value="">{{ filter.label }}</option>
+          <option v-for="opt in filter.options" :key="opt" :value="opt">{{ opt }}</option>
+        </select>
       </div>
     </div>
     
@@ -107,9 +72,9 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'reset', 'toggle-tag'])
 
 const brands = ['YONEX', 'VICTOR', 'LI-NING', 'MIZUNO']
-const weights = ['3U', '4U', '5U', 'F']
+const weights = ['3U', '4U', '5U', '6U', '7U', 'F']
 const balances = ['HEAD LIGHT', 'EVEN BALANCE', 'HEAD HEAVY']
-const flexes = ['FLEXIBLE', 'MEDIUM', 'STIFF', 'EXTRA STIFF']
+const flexes = ['FLEXIBLE', 'MEDIUM', 'STIFF']
 const colors = ['RED', 'BLUE', 'BLACK', 'WHITE', 'YELLOW', 'GREEN', 'ORANGE', 'PINK', 'PURPLE', 'SILVER', 'GOLD', 'NAVY', 'GREY']
 const popularTags = ['초보자용', '소리좋음', '잘깨짐', '가성비', '공격형', '수비형']
 
